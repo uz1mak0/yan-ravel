@@ -1,65 +1,193 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
 
 export default function Home() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    number: "",
+    origin: "",
+    destination: "",
+    departureDate: "",
+    returnDate: "",
+    budget: "",
+    travelers: "",
+    adults: "",
+    viatorUrl: "https://viator-api.p.rapidapi.com/tour",
+    subscription: "", 
+    paymentMethod: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelection = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.subscription) return alert("Please select a subscription tier.");
+    if (!formData.paymentMethod) return alert("Please select a payment method.");
+
+    console.log("Sending payload to n8n:", formData);
+    alert("Payload ready! Check your browser console to see the JSON data.");
+    setIsModalOpen(false);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden font-sans bg-zinc-900">
+      
+      {/* Video Background */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 z-0 w-full h-full object-cover"
+      >
+        <source src="/travel.mp4" type="video/mp4" />
+      </video>
+
+      <div className="absolute inset-0 z-0 bg-black/40"></div>
+
+      {/* Hero Section */}
+      <div className="relative z-10 flex flex-col items-center justify-center text-center px-4">
+        <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 drop-shadow-lg tracking-tight">
+          Discover the World
+        </h1>
+        <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-2xl drop-shadow-md">
+          Your personalized itinerary is just a few clicks away. Let AI handle the planning so you can handle the exploring.
+        </p>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="px-8 py-4 bg-white text-gray-900 rounded-full font-bold text-xl shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105 hover:bg-gray-100 transition-all duration-300 ease-in-out"
+        >
+          Start Your Journey
+        </button>
+      </div>
+
+      {/* Modal Overlay and Form */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          
+          <main className="relative w-full max-w-4xl p-8 md:p-12 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
+            
+            <button 
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-4 right-4 md:top-8 md:right-8 p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+              aria-label="Close modal"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="text-center mb-10">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 tracking-tight">
+                Plan Your Amazing Journey
+              </h2>
+              <p className="text-gray-600">Provide your details and select an AI tier to generate your itinerary.</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-10">
+              
+              {/* Section 1: Contact Info */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-gray-900 border-b pb-2">1. Contact Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+                    <input type="text" name="name" value={formData.name} onChange={handleChange} required
+                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="John Doe" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} required
+                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="email@example.com" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+                    <input type="tel" name="number" value={formData.number} onChange={handleChange} required
+                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="+1 234 567 8900" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Flight & Stay Details */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-gray-900 border-b pb-2">2. Flight & Stay Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Origin</label>
+                    <input type="text" name="origin" value={formData.origin} onChange={handleChange} required
+                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 uppercase" placeholder="MNL" maxLength={3} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Destination</label>
+                    <input type="text" name="destination" value={formData.destination} onChange={handleChange} required
+                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 uppercase" placeholder="HND" maxLength={3} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Departure</label>
+                    <input type="date" name="departureDate" value={formData.departureDate} onChange={handleChange} required
+                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Return</label>
+                    <input type="date" name="returnDate" value={formData.returnDate} onChange={handleChange} required
+                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: AI Tier Selection */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-gray-900 border-b pb-2">3. Select AI Generation Tier</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {["Tier 1: Free", "Tier 2: Enterprise", "Tier 3: Expert"].map((tier, idx) => (
+                    <div key={tier}
+                      onClick={() => handleSelection("subscription", tier)}
+                      className={`cursor-pointer p-6 rounded-3xl border-2 transition-all duration-200 ${
+                        formData.subscription === tier ? "border-blue-600 bg-blue-50" : "border-gray-200 hover:border-blue-300"
+                      }`}
+                    >
+                      <h4 className="font-bold text-gray-900 text-lg mb-1">{tier.split(": ")[1]}</h4>
+                      <p className="text-sm text-gray-600">{(idx + 1) * 10} USD</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section 4: Payment Method */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-gray-900 border-b pb-2">4. Payment Method</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div onClick={() => handleSelection("paymentMethod", "E-Wallet")}
+                    className={`cursor-pointer p-6 rounded-3xl border-2 transition-all ${formData.paymentMethod === "E-Wallet" ? "border-gray-900 bg-gray-50" : "border-gray-200"}`}>
+                    <h4 className="font-bold text-gray-900">E-Wallet (GCash, Maya)</h4>
+                  </div>
+                  <div onClick={() => handleSelection("paymentMethod", "Card")}
+                    className={`cursor-pointer p-6 rounded-3xl border-2 transition-all ${formData.paymentMethod === "Card" ? "border-gray-900 bg-gray-50" : "border-gray-200"}`}>
+                    <h4 className="font-bold text-gray-900">Credit / Debit Card</h4>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" 
+                className="w-full py-4 rounded-full shadow-lg text-lg font-bold text-white bg-black hover:bg-gray-800 transition-all">
+                Submit
+              </button>
+            </form>
+          </main>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      )}
     </div>
   );
 }
