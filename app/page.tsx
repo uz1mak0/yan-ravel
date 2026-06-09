@@ -4,6 +4,11 @@ import { useState } from "react";
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const webhookUrl = "http://localhost:5678/webhook-test/travel-search";
+  const MAX_STAY_DAYS = 90;
+  const MS_IN_DAY = 1000 * 60 * 60 * 24;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -17,7 +22,7 @@ export default function Home() {
     travelers: "",
     adults: "",
     viatorUrl: "https://viator-api.p.rapidapi.com/tour",
-    subscription: "", 
+    // subscription: "", 
     paymentMethod: "",
   });
 
@@ -30,16 +35,81 @@ export default function Home() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const parseDateInput = (value: string) => {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(Date.UTC(year, month - 1, day));
+  };
+
+  const addDaysToDateInput = (value: string, days: number) => {
+    const date = parseDateInput(value);
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.subscription) return alert("Please select a subscription tier.");
-    if (!formData.paymentMethod) return alert("Please select a payment method.");
 
-    console.log("Sending payload to n8n:", formData);
-    alert("Payload ready! Check your browser console to see the JSON data.");
-    setIsModalOpen(false);
+    if (!formData.paymentMethod) return alert("Please select payment method.");
+    if (!webhookUrl) return alert("Missing WEBHOOK_URL");
+    if (!formData.departureDate || !formData.returnDate) {
+      return alert("Please select both departure and return dates.");
+    }
+
+    const departure = parseDateInput(formData.departureDate);
+    const returnDate = parseDateInput(formData.returnDate);
+    const stayLengthDays = Math.round((returnDate.getTime() - departure.getTime()) / MS_IN_DAY);
+
+    if (Number.isNaN(departure.getTime()) || Number.isNaN(returnDate.getTime())) {
+      return alert("Invalid date input. Please re-check your travel dates.");
+    }
+    if (stayLengthDays < 1) {
+      return alert("Return date must be at least 1 day after departure date.");
+    }
+    if (stayLengthDays > MAX_STAY_DAYS) {
+      return alert(`Return date must be within ${MAX_STAY_DAYS} days of departure for hotel search.`);
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const payload = {
+        ...formData,
+        stayLengthDays,
+        submittedAt: new Date().toISOString(),
+        source: "yan-ravel-frontend",
+      };
+
+      const res = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const body = await res.text();
+      if (!res.ok) throw new Error(`n8n ${res.status}: ${body}`);
+
+      setIsModalOpen(false);
+    }catch (error) {
+      console.error("Webhook send failed:", error);
+      alert("Failed to send payload to n8n. Check the logs.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+    
+  //   // if (!formData.subscription) return alert("Please select a subscription tier.");
+  //   if (!formData.paymentMethod) return alert("Please select a payment method.");
+
+  //   console.log("Sending payload to n8n:", formData);
+  //   alert("Payload ready! Check your browser console to see the JSON data.");
+  //   setIsModalOpen(false);
+  // };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden font-sans bg-zinc-900">
@@ -141,17 +211,35 @@ export default function Home() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Return</label>
-                    <input type="date" name="returnDate" value={formData.returnDate} onChange={handleChange} required
+                    <input type="date" name="returnDate" value={formData.returnDate} onChange={handleChange}
+                      min={formData.departureDate || undefined}
+                      max={formData.departureDate ? addDaysToDateInput(formData.departureDate, MAX_STAY_DAYS) : undefined}
+                      required
                       className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Adults</label>
+                    <input type="text" name="adults" value={formData.adults} onChange={handleChange} required
+                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 uppercase" placeholder="1" maxLength={3} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Budget</label>
+                    <input type="text" name="budget" value={formData.budget} onChange={handleChange} required
+                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 uppercase" placeholder="$2500" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Travelers</label>
+                    <input type="text" name="travelers" value={formData.travelers} onChange={handleChange} required
+                      className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 uppercase" placeholder="1" maxLength={3} />
                   </div>
                 </div>
               </div>
 
               {/* Section 3: AI Tier Selection */}
-              <div className="space-y-4">
+              {/*<div className="space-y-4">
                 <h3 className="text-lg font-bold text-gray-900 border-b pb-2">3. Select AI Generation Tier</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {["Tier 1: Free", "Tier 2: Enterprise", "Tier 3: Expert"].map((tier, idx) => (
+                  {["Tier 1: Low Reasoning", "Tier 2: Medium Reasoning", "Tier 3: High Reasoning"].map((tier, idx) => (
                     <div key={tier}
                       onClick={() => handleSelection("subscription", tier)}
                       className={`cursor-pointer p-6 rounded-3xl border-2 transition-all duration-200 ${
@@ -163,11 +251,11 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </div>*/}
 
-              {/* Section 4: Payment Method */}
+              {/* Section 3: Payment Method */}
               <div className="space-y-4">
-                <h3 className="text-lg font-bold text-gray-900 border-b pb-2">4. Payment Method</h3>
+                <h3 className="text-lg font-bold text-gray-900 border-b pb-2">3. Payment Method</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div onClick={() => handleSelection("paymentMethod", "E-Wallet")}
                     className={`cursor-pointer p-6 rounded-3xl border-2 transition-all ${formData.paymentMethod === "E-Wallet" ? "border-gray-900 bg-gray-50" : "border-gray-200"}`}>
@@ -180,9 +268,10 @@ export default function Home() {
                 </div>
               </div>
 
-              <button type="submit" 
+              <button type="submit"
+                disabled={isSubmitting}
                 className="w-full py-4 rounded-full shadow-lg text-lg font-bold text-white bg-black hover:bg-gray-800 transition-all">
-                Submit
+                {isSubmitting ? "Sending..." : "Submit"}
               </button>
             </form>
           </main>
