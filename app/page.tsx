@@ -21,7 +21,6 @@ export default function Home() {
     budget: "",
     travelers: "",
     adults: "",
-    viatorUrl: "https://viator-api.p.rapidapi.com/tour",
     // subscription: "", 
     paymentMethod: "",
   });
@@ -114,7 +113,6 @@ export default function Home() {
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden font-sans bg-zinc-900">
       
-      {/* Video Background */}
       <video
         autoPlay
         loop
@@ -127,7 +125,6 @@ export default function Home() {
 
       <div className="absolute inset-0 z-0 bg-black/40"></div>
 
-      {/* Hero Section */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4">
         <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 drop-shadow-lg tracking-tight">
           Discover the World
@@ -143,7 +140,6 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Modal Overlay and Form */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           
@@ -168,7 +164,7 @@ export default function Home() {
 
             <form onSubmit={handleSubmit} className="space-y-10">
               
-              {/* Section 1: Contact Info */}
+              
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-gray-900 border-b pb-2">1. Contact Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -190,7 +186,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Section 2: Flight & Stay Details */}
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-gray-900 border-b pb-2">2. Flight & Stay Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -235,7 +230,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Section 3: AI Tier Selection */}
               {/*<div className="space-y-4">
                 <h3 className="text-lg font-bold text-gray-900 border-b pb-2">3. Select AI Generation Tier</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -253,7 +247,6 @@ export default function Home() {
                 </div>
               </div>*/}
 
-              {/* Section 3: Payment Method */}
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-gray-900 border-b pb-2">3. Payment Method</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
