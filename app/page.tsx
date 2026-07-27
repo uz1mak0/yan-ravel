@@ -159,7 +159,7 @@ export default function Home() {
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 tracking-tight">
                 Plan Your Amazing Journey
               </h2>
-              <p className="text-gray-600">Provide your details and select an AI tier to generate your itinerary.</p>
+              <p className="text-gray-600">Provide your details to generate your itinerary.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-10">
