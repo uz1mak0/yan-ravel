@@ -22,8 +22,22 @@ export default function Home() {
     travelers: "",
     adults: "",
     // subscription: "", 
-    paymentMethod: "",
   });
+
+  const requiredFields: (keyof typeof formData)[] = [
+    "name",
+    "email",
+    "number",
+    "origin",
+    "destination",
+    "departureDate",
+    "returnDate",
+    "budget",
+    "travelers",
+    "adults",
+  ];
+
+  const isFormComplete = requiredFields.every((field) => formData[field].trim() !== "");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -48,7 +62,7 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.paymentMethod) return alert("Please select payment method.");
+    if (!isFormComplete) return alert("Please fill out all fields before submitting.");
     if (!webhookUrl) return alert("Missing WEBHOOK_URL");
     if (!formData.departureDate || !formData.returnDate) {
       return alert("Please select both departure and return dates.");
@@ -247,24 +261,10 @@ export default function Home() {
                 </div>
               </div>*/}
 
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-gray-900 border-b pb-2">3. Payment Method</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div onClick={() => handleSelection("paymentMethod", "E-Wallet")}
-                    className={`cursor-pointer p-6 rounded-3xl border-2 transition-all ${formData.paymentMethod === "E-Wallet" ? "border-gray-900 bg-gray-50" : "border-gray-200"}`}>
-                    <h4 className="font-bold text-gray-900">E-Wallet (GCash, Maya)</h4>
-                  </div>
-                  <div onClick={() => handleSelection("paymentMethod", "Card")}
-                    className={`cursor-pointer p-6 rounded-3xl border-2 transition-all ${formData.paymentMethod === "Card" ? "border-gray-900 bg-gray-50" : "border-gray-200"}`}>
-                    <h4 className="font-bold text-gray-900">Credit / Debit Card</h4>
-                  </div>
-                </div>
-              </div>
-
               <button type="submit"
-                disabled={isSubmitting}
-                className="w-full py-4 rounded-full shadow-lg text-lg font-bold text-white bg-black hover:bg-gray-800 transition-all">
-                {isSubmitting ? "Sending..." : "Submit"}
+                disabled={isSubmitting || !isFormComplete}
+                className="w-full py-4 rounded-full shadow-lg text-lg font-bold text-white bg-black hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                {isSubmitting ? "Sending..." : !isFormComplete ? "Fill Out All Fields" : "Submit"}
               </button>
             </form>
           </main>
