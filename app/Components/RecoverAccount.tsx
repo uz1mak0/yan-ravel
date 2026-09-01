@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const basePath = process.env.NODE_ENV === "production" ? "/yan-ravel" : "";
+
 export default function RecoverAccount() {
   const router = useRouter();
 
@@ -54,7 +56,7 @@ export default function RecoverAccount() {
         playsInline
         className="absolute inset-0 z-0 w-full h-full object-cover"
       >
-        <source src="/travel.mp4" type="video/mp4" />
+        <source src={`${basePath}/travel.mp4`} type="video/mp4" />
       </video>
 
       <div className="absolute inset-0 z-0 bg-black/40"></div>
