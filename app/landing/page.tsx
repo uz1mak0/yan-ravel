@@ -14,10 +14,9 @@ export default function Home() {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
-  const [selectedTier, setSelectedTier] = useState("");
+  const [selectedTier, setSelectedTier] = useState<string>("Basic");
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [isProfileEditing, setIsProfileEditing] = useState(false);
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [profileData, setProfileData] = useState({
     fullName: "",
@@ -54,7 +53,6 @@ export default function Home() {
       return;
     }
 
-    // TODO: replace with your real upload request (this just previews locally for now)
     const reader = new FileReader();
     reader.onload = () => setProfilePicture(reader.result as string);
     reader.readAsDataURL(file);
@@ -63,7 +61,6 @@ export default function Home() {
   };
 
   const handleRemoveProfilePicture = () => {
-    // TODO: replace with your real "delete profile picture" request
     setProfilePicture(null);
     if (profilePictureInputRef.current) profilePictureInputRef.current.value = "";
   };
@@ -72,58 +69,13 @@ export default function Home() {
     e.preventDefault();
     try {
       setIsProfileSaving(true);
-      // TODO: replace with your real profile update request (send profilePicture as a file/blob to your backend, not this data URL)
       console.log("Saving profile:", profileData, "has picture:", Boolean(profilePicture));
-      setIsProfileEditing(false);
+      setIsProfileModalOpen(false);
     } catch (error) {
       console.error("Profile update failed:", error);
       alert("Failed to update profile. Please try again.");
     } finally {
       setIsProfileSaving(false);
-    }
-  };
-
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
-  const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
-  const [authData, setAuthData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-
-  const handleAuthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setAuthData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const isAuthFormComplete =
-    authMode === "signin"
-      ? authData.email.trim() !== "" && authData.password.trim() !== ""
-      : authData.name.trim() !== "" &&
-      authData.email.trim() !== "" &&
-      authData.password.trim() !== "" &&
-      authData.confirmPassword.trim() !== "";
-
-  const handleAuthSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!isAuthFormComplete) return alert("Please fill out all fields.");
-    if (authMode === "signup" && authData.password !== authData.confirmPassword) {
-      return alert("Passwords do not match.");
-    }
-
-    try {
-      setIsAuthSubmitting(true);
-      // TODO: replace with your real sign-in / sign-up request
-      console.log(authMode === "signin" ? "Signing in:" : "Signing up:", authData);
-      setIsAuthModalOpen(false);
-    } catch (error) {
-      console.error("Auth request failed:", error);
-      alert("Something went wrong. Please try again.");
-    } finally {
-      setIsAuthSubmitting(false);
     }
   };
 
@@ -142,7 +94,6 @@ export default function Home() {
     budget: "",
     travelers: "",
     adults: "",
-    // subscription: "", 
   });
 
   const requiredFields: (keyof typeof formData)[] = [
@@ -162,10 +113,6 @@ export default function Home() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelection = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -208,6 +155,7 @@ export default function Home() {
 
       const payload = {
         ...formData,
+        subscriptionTier: selectedTier || "Basic",
         stayLengthDays,
         submittedAt: new Date().toISOString(),
         source: "yan-ravel-frontend",
@@ -234,22 +182,8 @@ export default function Home() {
     }
   };
 
-
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   // if (!formData.subscription) return alert("Please select a subscription tier.");
-  //   if (!formData.paymentMethod) return alert("Please select a payment method.");
-
-  //   console.log("Sending payload to n8n:", formData);
-  //   alert("Payload ready! Check your browser console to see the JSON data.");
-  //   setIsModalOpen(false);
-  // };
-
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden font-sans bg-zinc-900">
-
-      {/* Sidebar toggle button */}
       <button
         onClick={() => setIsSidebarOpen(true)}
         aria-label="Open menu"
@@ -260,7 +194,6 @@ export default function Home() {
         </svg>
       </button>
 
-      {/* Sidebar overlay */}
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
@@ -268,7 +201,6 @@ export default function Home() {
         />
       )}
 
-      {/* Right-side sidebar */}
       <aside
         className={`fixed top-0 right-0 z-50 h-full w-72 bg-white/95 backdrop-blur-xl shadow-2xl transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "translate-x-full"
           }`}
@@ -316,7 +248,6 @@ export default function Home() {
           <button
             onClick={() => {
               setIsSidebarOpen(false);
-              // TODO: navigate to settings
             }}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-800 font-medium hover:bg-gray-100 transition-colors text-left"
           >
@@ -344,13 +275,7 @@ export default function Home() {
         </nav>
       </aside>
 
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 z-0 w-full h-full object-cover"
-      >
+      <video autoPlay loop muted playsInline className="absolute inset-0 z-0 w-full h-full object-cover">
         <source src={`${basePath}/travel.mp4`} type="video/mp4" />
       </video>
 
@@ -371,11 +296,10 @@ export default function Home() {
         </button>
       </div>
 
+      {/* Main Itinerary Form Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-
           <main className="relative w-full max-w-4xl p-8 md:p-12 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
-
             <button
               onClick={() => setIsModalOpen(false)}
               className="absolute top-4 right-4 md:top-8 md:right-8 p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
@@ -391,11 +315,12 @@ export default function Home() {
                 Plan Your Amazing Journey
               </h2>
               <p className="text-gray-600">Provide your details to generate your itinerary.</p>
+              <span className="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+                Selected Plan: {selectedTier || "Basic"}
+              </span>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-10">
-
-
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-gray-900 border-b pb-2">1. Contact Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -421,14 +346,14 @@ export default function Home() {
                 <h3 className="text-lg font-bold text-gray-900 border-b pb-2">2. Flight & Stay Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Origin</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Origin City/Country</label>
                     <input type="text" name="origin" value={formData.origin} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 uppercase" placeholder="MNL" maxLength={3} />
+                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="Manila, Philippines" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Destination</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Destination City/Country</label>
                     <input type="text" name="destination" value={formData.destination} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 uppercase" placeholder="HND" maxLength={3} />
+                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="Tokyo, Japan" />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Departure</label>
@@ -446,37 +371,20 @@ export default function Home() {
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Adults</label>
                     <input type="text" name="adults" value={formData.adults} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 uppercase" placeholder="1" maxLength={3} />
+                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="1" maxLength={3} />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Budget</label>
                     <input type="text" name="budget" value={formData.budget} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 uppercase" placeholder="$2500" />
+                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="$2500" />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Travelers</label>
                     <input type="text" name="travelers" value={formData.travelers} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 uppercase" placeholder="1" maxLength={3} />
+                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="1" maxLength={3} />
                   </div>
                 </div>
               </div>
-
-              {/*<div className="space-y-4">
-                <h3 className="text-lg font-bold text-gray-900 border-b pb-2">3. Select AI Generation Tier</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {["Tier 1: Low Reasoning", "Tier 2: Medium Reasoning", "Tier 3: High Reasoning"].map((tier, idx) => (
-                    <div key={tier}
-                      onClick={() => handleSelection("subscription", tier)}
-                      className={`cursor-pointer p-6 rounded-3xl border-2 transition-all duration-200 ${
-                        formData.subscription === tier ? "border-blue-600 bg-blue-50" : "border-gray-200 hover:border-blue-300"
-                      }`}
-                    >
-                      <h4 className="font-bold text-gray-900 text-lg mb-1">{tier.split(": ")[1]}</h4>
-                      <p className="text-sm text-gray-600">{(idx + 1) * 10} USD</p>
-                    </div>
-                  ))}
-                </div>
-              </div>*/}
 
               <button type="submit"
                 disabled={isSubmitting || !isFormComplete}
@@ -488,311 +396,10 @@ export default function Home() {
         </div>
       )}
 
-      {isAuthModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-
-          <main className="relative w-full max-w-md p-8 md:p-10 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
-
-            <button
-              onClick={() => setIsAuthModalOpen(false)}
-              className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
-              aria-label="Close modal"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
-                {authMode === "signin" ? "Welcome Back" : "Create Your Account"}
-              </h2>
-              <p className="text-gray-600">
-                {authMode === "signin"
-                  ? "Sign in to continue planning your journey."
-                  : "Sign up to start planning your journey."}
-              </p>
-            </div>
-
-            {/* Mode switcher */}
-            <div className="flex mb-8 bg-gray-100 rounded-full p-1">
-              <button
-                type="button"
-                onClick={() => setAuthMode("signin")}
-                className={`flex-1 py-2.5 rounded-full text-sm font-semibold transition-all ${authMode === "signin" ? "bg-white text-gray-900 shadow" : "text-gray-500 hover:text-gray-700"
-                  }`}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => setAuthMode("signup")}
-                className={`flex-1 py-2.5 rounded-full text-sm font-semibold transition-all ${authMode === "signup" ? "bg-white text-gray-900 shadow" : "text-gray-500 hover:text-gray-700"
-                  }`}
-              >
-                Sign Up
-              </button>
-            </div>
-
-            <form onSubmit={handleAuthSubmit} className="space-y-4">
-              {authMode === "signup" && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
-                  <input type="text" name="name" value={authData.name} onChange={handleAuthChange} required
-                    className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="John Doe" />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-                <input type="email" name="email" value={authData.email} onChange={handleAuthChange} required
-                  className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="email@example.com" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
-                <input type="password" name="password" value={authData.password} onChange={handleAuthChange} required
-                  className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="••••••••" />
-              </div>
-
-              {authMode === "signup" && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Confirm Password</label>
-                  <input type="password" name="confirmPassword" value={authData.confirmPassword} onChange={handleAuthChange} required
-                    className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="••••••••" />
-                </div>
-              )}
-
-              {authMode === "signin" && (
-                <div className="text-right">
-                  <button type="button" className="text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">
-                    Forgot password?
-                  </button>
-                </div>
-              )}
-
-              <button type="submit"
-                disabled={isAuthSubmitting || !isAuthFormComplete}
-                className="w-full py-4 rounded-full shadow-lg text-lg font-bold text-white bg-black hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                {isAuthSubmitting
-                  ? "Please wait..."
-                  : authMode === "signin"
-                    ? "Sign In"
-                    : "Create Account"}
-              </button>
-            </form>
-
-            <p className="text-center text-sm text-gray-500 mt-6">
-              {authMode === "signin" ? (
-                <>
-                  Don&apos;t have an account?{" "}
-                  <button type="button" onClick={() => setAuthMode("signup")} className="font-semibold text-gray-900 hover:underline">
-                    Sign up
-                  </button>
-                </>
-              ) : (
-                <>
-                  Already have an account?{" "}
-                  <button type="button" onClick={() => setAuthMode("signin")} className="font-semibold text-gray-900 hover:underline">
-                    Sign in
-                  </button>
-                </>
-              )}
-            </p>
-          </main>
-        </div>
-      )}
-
-      {isProfileModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-          <main className="relative w-full max-w-2xl p-8 md:p-12 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
-
-            <button
-              onClick={() => {
-                setIsProfileModalOpen(false);
-                setIsProfileEditing(false);
-              }}
-              className="absolute top-4 right-4 md:top-8 md:right-8 p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
-              aria-label="Close modal"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            <div className="flex flex-col items-center text-center mb-10">
-              <div className="relative mb-4">
-                <div className="h-24 w-24 rounded-full bg-gray-900 text-white flex items-center justify-center text-3xl font-bold overflow-hidden">
-                  {profilePicture ? (
-                    <img src={profilePicture} alt="Profile picture" className="h-full w-full object-cover" />
-                  ) : profileData.fullName.trim() ? (
-                    profileData.fullName.trim().charAt(0).toUpperCase()
-                  ) : (
-                    "?"
-                  )}
-                </div>
-
-                {isProfileEditing && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => profilePictureInputRef.current?.click()}
-                      aria-label={profilePicture ? "Change profile picture" : "Upload profile picture"}
-                      className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-black text-white flex items-center justify-center shadow-lg hover:bg-gray-800 transition-colors"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </button>
-
-                    {profilePicture && (
-                      <button
-                        type="button"
-                        onClick={handleRemoveProfilePicture}
-                        aria-label="Remove profile picture"
-                        className="absolute top-0 right-0 h-6 w-6 rounded-full bg-white text-gray-500 border border-gray-200 flex items-center justify-center shadow hover:text-red-600 hover:border-red-200 transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                  </>
-                )}
-
-                <input
-                  ref={profilePictureInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleProfilePictureChange}
-                  className="hidden"
-                />
-              </div>
-
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-                {profileData.fullName.trim() || "Your Profile"}
-              </h2>
-              <p className="text-gray-500">{profileData.email || "No email set"}</p>
-
-              {isProfileEditing && (
-                <p className="text-xs text-gray-400 mt-2">
-                  Click the camera icon to {profilePicture ? "change" : "upload"} your photo
-                  {profilePicture ? ", or the X to remove it." : "."}
-                </p>
-              )}
-            </div>
-
-            <form onSubmit={handleProfileSave} className="space-y-10">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between border-b pb-2">
-                  <h3 className="text-lg font-bold text-gray-900">Personal Information</h3>
-                  {!isProfileEditing && (
-                    <button
-                      type="button"
-                      onClick={() => setIsProfileEditing(true)}
-                      className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                    >
-                      Edit
-                    </button>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
-                    <input type="text" name="fullName" value={profileData.fullName} onChange={handleProfileChange}
-                      disabled={!isProfileEditing}
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 disabled:bg-gray-50 disabled:text-gray-500"
-                      placeholder="John Doe" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-                    <input type="email" name="email" value={profileData.email} onChange={handleProfileChange}
-                      disabled={!isProfileEditing}
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 disabled:bg-gray-50 disabled:text-gray-500"
-                      placeholder="email@example.com" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
-                    <input type="tel" name="phone" value={profileData.phone} onChange={handleProfileChange}
-                      disabled={!isProfileEditing}
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 disabled:bg-gray-50 disabled:text-gray-500"
-                      placeholder="+1 234 567 8900" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Date of Birth</label>
-                    <input type="date" name="dateOfBirth" value={profileData.dateOfBirth} onChange={handleProfileChange}
-                      disabled={!isProfileEditing}
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 disabled:bg-gray-50 disabled:text-gray-500" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Gender</label>
-                    <select name="gender" value={profileData.gender} onChange={handleProfileChange}
-                      disabled={!isProfileEditing}
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 disabled:bg-gray-50 disabled:text-gray-500">
-                      <option value="">Prefer not to say</option>
-                      <option value="female">Female</option>
-                      <option value="male">Male</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Country</label>
-                    <input type="text" name="country" value={profileData.country} onChange={handleProfileChange}
-                      disabled={!isProfileEditing}
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 disabled:bg-gray-50 disabled:text-gray-500"
-                      placeholder="Philippines" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-gray-900 border-b pb-2">Additional Details</h3>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Address</label>
-                  <input type="text" name="address" value={profileData.address} onChange={handleProfileChange}
-                    disabled={!isProfileEditing}
-                    className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 disabled:bg-gray-50 disabled:text-gray-500"
-                    placeholder="Street, City, ZIP" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Bio</label>
-                  <textarea name="bio" value={profileData.bio} onChange={handleProfileChange}
-                    disabled={!isProfileEditing}
-                    rows={3}
-                    className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800 disabled:bg-gray-50 disabled:text-gray-500 resize-none"
-                    placeholder="Tell us a little about yourself" />
-                </div>
-              </div>
-
-              {isProfileEditing && (
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsProfileEditing(false)}
-                    className="flex-1 py-4 rounded-full font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isProfileSaving}
-                    className="flex-1 py-4 rounded-full shadow-lg text-lg font-bold text-white bg-black hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                  >
-                    {isProfileSaving ? "Saving..." : "Save Changes"}
-                  </button>
-                </div>
-              )}
-            </form>
-          </main>
-        </div>
-      )}
-
+      {/* Subscription Modal */}
       {isSubscriptionModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           <main className="relative w-full max-w-2xl p-8 md:p-12 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
-
             <button
               onClick={() => setIsSubscriptionModalOpen(false)}
               className="absolute top-4 right-4 md:top-8 md:right-8 p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
@@ -825,49 +432,146 @@ export default function Home() {
             <button
               type="button"
               disabled={!selectedTier}
-              onClick={() => {
-                // TODO: replace with your real subscription/checkout request
-                console.log("Subscribing to tier:", selectedTier);
-                setIsSubscriptionModalOpen(false);
-              }}
+              onClick={() => setIsSubscriptionModalOpen(false)}
               className="w-full py-4 rounded-full shadow-lg text-lg font-bold text-white bg-black hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
-              {selectedTier ? `Subscribe to ${selectedTier}` : "Select a Plan"}
+              {selectedTier ? `Select ${selectedTier}` : "Select a Plan"}
             </button>
           </main>
         </div>
       )}
 
-      {isLogoutModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-          <main className="relative w-full max-w-sm p-8 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl text-center animate-in fade-in zoom-in-95 duration-200">
-            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+      {/* Profile Modal */}
+      {isProfileModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <main className="relative w-full max-w-2xl p-8 md:p-12 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setIsProfileModalOpen(false)}
+              className="absolute top-4 right-4 md:top-8 md:right-8 p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+              aria-label="Close modal"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
+            </button>
+
+            <div className="text-center mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Profile Details</h2>
+              <p className="text-gray-500 mt-1">Manage your personal settings and info.</p>
             </div>
 
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Are you sure?</h2>
-            <p className="text-gray-600 mb-8">You want to logout of your account.</p>
+            <form onSubmit={handleProfileSave} className="space-y-6">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-24 h-24 rounded-full bg-gray-200 border-2 border-gray-300 overflow-hidden flex items-center justify-center">
+                  {profilePicture ? (
+                    <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-4xl text-gray-400">👤</span>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  ref={profilePictureInputRef}
+                  onChange={handleProfilePictureChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <div className="flex gap-2 text-sm">
+                  <button
+                    type="button"
+                    onClick={() => profilePictureInputRef.current?.click()}
+                    className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                  >
+                    Upload
+                  </button>
+                  {profilePicture && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveProfilePicture}
+                      className="px-3 py-1 bg-red-50 text-red-600 rounded-lg hover:bg-red-100"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
 
-            <div className="flex gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={profileData.fullName}
+                    onChange={handleProfileChange}
+                    className="w-full px-4 py-3 rounded-2xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={profileData.email}
+                    onChange={handleProfileChange}
+                    className="w-full px-4 py-3 rounded-2xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={profileData.phone}
+                    onChange={handleProfileChange}
+                    className="w-full px-4 py-3 rounded-2xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Country</label>
+                  <input
+                    type="text"
+                    name="country"
+                    value={profileData.country}
+                    onChange={handleProfileChange}
+                    className="w-full px-4 py-3 rounded-2xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                  />
+                </div>
+              </div>
+
               <button
-                type="button"
-                onClick={() => setIsLogoutModalOpen(false)}
-                className="flex-1 py-3 rounded-full font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                type="submit"
+                disabled={isProfileSaving}
+                className="w-full py-4 rounded-full text-lg font-bold text-white bg-black hover:bg-gray-800 disabled:opacity-40 transition-all"
               >
-                No
+                {isProfileSaving ? "Saving..." : "Save Changes"}
+              </button>
+            </form>
+          </main>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <main className="relative w-full max-w-md p-8 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-center">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Log Out</h3>
+            <p className="text-gray-600 mb-6">Are you sure you want to log out of your account?</p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setIsLogoutModalOpen(false)}
+                className="flex-1 py-3 rounded-full text-gray-700 bg-gray-100 hover:bg-gray-200 font-bold transition-all"
+              >
+                Cancel
               </button>
               <button
-                type="button"
                 onClick={() => {
                   setIsLogoutModalOpen(false);
-                  // TODO: clear session/auth state before redirecting
                   router.push("/");
                 }}
-                className="flex-1 py-3 rounded-full font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors"
+                className="flex-1 py-3 rounded-full text-white bg-red-600 hover:bg-red-700 font-bold transition-all"
               >
-                Yes
+                Logout
               </button>
             </div>
           </main>
