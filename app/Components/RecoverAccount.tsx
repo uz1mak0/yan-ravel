@@ -26,7 +26,6 @@ export default function RecoverAccount() {
 
     try {
       setIsSubmitting(true);
-      // TODO: replace with your real password/username recovery request (no validation implemented yet)
       console.log(
         recoveryMode === "password" ? "Recovering password for:" : "Recovering username for:",
         recoveryData
@@ -77,7 +76,7 @@ export default function RecoverAccount() {
                 </p>
               </div>
 
-              {/* Mode switcher */}
+
               <div className="flex mb-8 bg-gray-100 rounded-full p-1">
                 <button
                   type="button"

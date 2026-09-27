@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 const basePath = process.env.NODE_ENV === "production" ? "/yan-ravel" : "";
@@ -31,6 +31,31 @@ export default function Home() {
 
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const profilePictureInputRef = useRef<HTMLInputElement>(null);
+
+  // Populate profile fields from the session saved during sign in / sign up
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("userSession");
+      if (!stored) return;
+
+      const session = JSON.parse(stored) as {
+        email?: string;
+        name?: string;
+        phone?: string;
+        country?: string;
+      };
+
+      setProfileData((prev) => ({
+        ...prev,
+        fullName: session.name ?? prev.fullName,
+        email: session.email ?? prev.email,
+        phone: session.phone ?? prev.phone,
+        country: session.country ?? prev.country,
+      }));
+    } catch (error) {
+      console.error("Failed to load user session:", error);
+    }
+  }, []);
 
   const handleProfileChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -69,8 +94,46 @@ export default function Home() {
     e.preventDefault();
     try {
       setIsProfileSaving(true);
-      console.log("Saving profile:", profileData, "has picture:", Boolean(profilePicture));
+
+      // Define your profile update webhook URL (similar to your travel request webhook)
+      const profileWebhookUrl = `${n8nBaseUrl}${useTestWebhook ? "/webhook-test" : "/webhook"}/auth/update-profile`;
+
+      const payload = {
+        email: profileData.email,
+        name: profileData.fullName,
+        phone: profileData.phone,
+        country: profileData.country,
+        profilePicture: profilePicture, // Base64 string of the image
+      };
+
+      const res = await fetch(profileWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-webhook-secret": process.env.NEXT_PUBLIC_N8N_WEBHOOK_SECRET!,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const resBody = await res.text();
+      if (!res.ok) throw new Error(`n8n ${res.status}: ${resBody}`);
+
+      // Keep local session in sync
+      const stored = localStorage.getItem("userSession");
+      const existingSession = stored ? JSON.parse(stored) : {};
+      localStorage.setItem(
+        "userSession",
+        JSON.stringify({
+          ...existingSession,
+          name: profileData.fullName,
+          email: profileData.email,
+          phone: profileData.phone,
+          country: profileData.country,
+        })
+      );
+
       setIsProfileModalOpen(false);
+      alert("Profile updated successfully!");
     } catch (error) {
       console.error("Profile update failed:", error);
       alert("Failed to update profile. Please try again.");
@@ -79,7 +142,11 @@ export default function Home() {
     }
   };
 
-  const webhookUrl = "http://localhost:5678/webhook-test/travel-search";
+  const n8nBaseUrl = (
+    process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || "http://localhost:5678"
+  ).replace(/\/$/, "");
+  const useTestWebhook = process.env.NEXT_PUBLIC_N8N_USE_TEST_WEBHOOK === "true";
+  const webhookUrl = `${n8nBaseUrl}${useTestWebhook ? "/webhook-test" : "/webhook"}/travel-request`;
   const MAX_STAY_DAYS = 90;
   const MS_IN_DAY = 1000 * 60 * 60 * 24;
 
@@ -551,7 +618,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Logout Confirmation Modal */}
       {isLogoutModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           <main className="relative w-full max-w-md p-8 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-center">
