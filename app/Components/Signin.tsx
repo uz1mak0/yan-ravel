@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import TravelLoader from "./TravelLoader";
 
 const basePath = process.env.NODE_ENV === "production" ? "/yan-ravel" : "";
 
@@ -14,6 +15,17 @@ interface AuthFormData {
   confirmPassword: string;
 }
 
+const cleanValue = (val: any): string => {
+  if (typeof val === "string") {
+    let trimmed = val.trim();
+    while (trimmed.startsWith("=")) {
+      trimmed = trimmed.slice(1).trim();
+    }
+    return trimmed;
+  }
+  return val ? String(val) : "";
+};
+
 export default function SignIn() {
   const router = useRouter();
 
@@ -21,6 +33,8 @@ export default function SignIn() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [redirectName, setRedirectName] = useState("");
 
   const [authData, setAuthData] = useState<AuthFormData>({
     name: "",
@@ -86,26 +100,29 @@ export default function SignIn() {
         return;
       }
 
-      // Prefer whatever the backend returns for the user; fall back to form input
       const returnedUser = data.user ?? data;
       const userPayload = {
-        email: returnedUser.email ?? email,
-        name: returnedUser.name ?? name ?? email.split("@")[0],
-        subscriptionTier: returnedUser.subscriptionTier ?? "Basic",
+        email: cleanValue(returnedUser.email ?? email),
+        name: cleanValue(returnedUser.name ?? returnedUser.fullName ?? name ?? email.split("@")[0]),
+        fullName: cleanValue(returnedUser.fullName ?? returnedUser.name ?? name ?? email.split("@")[0]),
+        phone: cleanValue(returnedUser.phone ?? returnedUser.mobile ?? returnedUser.phone_number ?? ""),
+        country: cleanValue(returnedUser.country ?? returnedUser.location ?? ""),
+        profilePicture: cleanValue(returnedUser.profilePicture ?? returnedUser.avatar_url ?? returnedUser.profile_picture ?? null),
+        avatar_url: cleanValue(returnedUser.avatar_url ?? returnedUser.profilePicture ?? null),
+        subscriptionTier: cleanValue(returnedUser.subscriptionTier ?? "Basic"),
       };
 
       localStorage.setItem("userSession", JSON.stringify(userPayload));
 
-      setSuccessMessage(
-        authMode === "signup"
-          ? "Account created! Redirecting you to your dashboard..."
-          : "Welcome back! Redirecting..."
-      );
+      try {
+        sessionStorage.setItem("yanRavelArrival", authMode);
+      } catch {
+        // sessionStorage unavailable
+      }
 
-      // Give the user a moment to see the confirmation before leaving the page
-      setTimeout(() => {
-        router.push("/landing");
-      }, 1200);
+      router.prefetch("/landing");
+      setRedirectName(userPayload.name);
+      setIsRedirecting(true);
     } catch (error: unknown) {
       console.error("Auth request failed:", error);
       setErrorMessage("Something went wrong. Please try again.");
@@ -140,14 +157,13 @@ export default function SignIn() {
             </p>
           </div>
 
-          {/* Mode switcher */}
           <div className="flex mb-6 bg-gray-100 rounded-full p-1">
             <button
               type="button"
               onClick={() => switchMode("signin")}
               className={`flex-1 py-2.5 rounded-full text-sm font-semibold transition-all ${authMode === "signin"
-                ? "bg-white text-gray-900 shadow"
-                : "text-gray-500 hover:text-gray-700"
+                  ? "bg-white text-gray-900 shadow"
+                  : "text-gray-500 hover:text-gray-700"
                 }`}
             >
               Sign In
@@ -156,8 +172,8 @@ export default function SignIn() {
               type="button"
               onClick={() => switchMode("signup")}
               className={`flex-1 py-2.5 rounded-full text-sm font-semibold transition-all ${authMode === "signup"
-                ? "bg-white text-gray-900 shadow"
-                : "text-gray-500 hover:text-gray-700"
+                  ? "bg-white text-gray-900 shadow"
+                  : "text-gray-500 hover:text-gray-700"
                 }`}
             >
               Sign Up
@@ -275,6 +291,13 @@ export default function SignIn() {
           </form>
         </main>
       </div>
+
+      <TravelLoader
+        visible={isRedirecting}
+        mode={authMode}
+        userName={redirectName}
+        onComplete={() => router.push("/landing")}
+      />
     </div>
   );
 }
