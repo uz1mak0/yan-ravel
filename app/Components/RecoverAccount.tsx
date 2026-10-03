@@ -5,127 +5,138 @@ import { useRouter } from "next/navigation";
 
 const basePath = process.env.NODE_ENV === "production" ? "/yan-ravel" : "";
 
+const n8nBaseUrl = (
+  process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || "http://localhost:5678"
+).replace(/\/$/, "");
+const useTestWebhook = process.env.NEXT_PUBLIC_N8N_USE_TEST_WEBHOOK === "true";
+const recoverWebhookUrl = `${n8nBaseUrl}${useTestWebhook ? "/webhook-test" : "/webhook"}/auth/recover-account`;
+
 export default function RecoverAccount() {
   const router = useRouter();
 
-  const [recoveryMode, setRecoveryMode] = useState<"password" | "username">("password");
+  const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const [recoveryData, setRecoveryData] = useState({
-    email: "",
-  });
-
-  const handleRecoveryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setRecoveryData((prev) => ({ ...prev, [name]: value }));
-  };
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleRecoverySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage("");
+
+    const cleanedEmail = email.trim().toLowerCase();
+    if (!cleanedEmail) return;
 
     try {
       setIsSubmitting(true);
-      console.log(
-        recoveryMode === "password" ? "Recovering password for:" : "Recovering username for:",
-        recoveryData
-      );
 
+      const res = await fetch(recoverWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-webhook-secret": process.env.NEXT_PUBLIC_N8N_WEBHOOK_SECRET!,
+        },
+        body: JSON.stringify({ email: cleanedEmail }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        // 400 = invalid email format; anything else is a server/network problem
+        throw new Error(data?.message || `Request failed (${res.status})`);
+      }
+
+      // The workflow always answers the same way whether or not the email exists,
+      // so we never reveal which addresses are registered.
       setIsSubmitted(true);
     } catch (error) {
       console.error("Recovery request failed:", error);
-      alert("Something went wrong. Please try again.");
+      setErrorMessage(
+        error instanceof Error && error.message
+          ? error.message
+          : "Something went wrong. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleModeChange = (mode: "password" | "username") => {
-    setRecoveryMode(mode);
-    setIsSubmitted(false);
-  };
-
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden font-sans bg-zinc-900">
-
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden font-sans bg-zinc-950">
+      {/* Cinematic Video Background */}
       <video
         autoPlay
         loop
         muted
         playsInline
-        className="absolute inset-0 z-0 w-full h-full object-cover"
+        className="absolute inset-0 z-0 w-full h-full object-cover scale-105"
       >
         <source src={`${basePath}/travel.mp4`} type="video/mp4" />
       </video>
 
-      <div className="absolute inset-0 z-0 bg-black/40"></div>
+      {/* Dark Gradient Overlay */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
 
       <div className="relative z-10 w-full max-w-md p-4">
-        <main className="w-full p-8 md:p-10 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl">
-
+        {/* Glassmorphic Container */}
+        <main className="w-full p-8 md:p-10 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200">
           {!isSubmitted ? (
             <>
               <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
+                <h1 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">
                   Account Recovery
                 </h1>
-                <p className="text-gray-600">
-                  {recoveryMode === "password"
-                    ? "Enter your email and we'll send you a reset link."
-                    : "Enter your email and we'll send you your username."}
+                <p className="text-gray-300 text-sm md:text-base">
+                  Enter the email you registered with and we&apos;ll send you a temporary password.
                 </p>
               </div>
 
-
-              <div className="flex mb-8 bg-gray-100 rounded-full p-1">
-                <button
-                  type="button"
-                  onClick={() => handleModeChange("password")}
-                  className={`flex-1 py-2.5 rounded-full text-sm font-semibold transition-all ${recoveryMode === "password" ? "bg-white text-gray-900 shadow" : "text-gray-500 hover:text-gray-700"
-                    }`}
-                >
-                  Password
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleModeChange("username")}
-                  className={`flex-1 py-2.5 rounded-full text-sm font-semibold transition-all ${recoveryMode === "username" ? "bg-white text-gray-900 shadow" : "text-gray-500 hover:text-gray-700"
-                    }`}
-                >
-                  Username
-                </button>
-              </div>
-
-              <form onSubmit={handleRecoverySubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+              <form onSubmit={handleRecoverySubmit} className="space-y-6">
+                {/* Floating Label Input */}
+                <div className="relative group">
                   <input
                     type="email"
+                    id="email"
                     name="email"
-                    value={recoveryData.email}
-                    onChange={handleRecoveryChange}
-                    className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errorMessage) setErrorMessage("");
+                    }}
+                    required
+                    autoComplete="email"
+                    className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent"
                     placeholder="email@example.com"
                   />
+                  <label
+                    htmlFor="email"
+                    className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text"
+                  >
+                    Email Address
+                  </label>
                 </div>
+
+                {errorMessage && (
+                  <p
+                    role="alert"
+                    className="text-sm text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-xl px-4 py-3"
+                  >
+                    {errorMessage}
+                  </p>
+                )}
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 rounded-full shadow-lg text-lg font-bold text-white bg-black hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="w-full py-4 rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.2)] text-lg font-bold text-black bg-white hover:bg-gray-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
                 >
-                  {isSubmitting
-                    ? "Please wait..."
-                    : recoveryMode === "password"
-                      ? "Send Reset Link"
-                      : "Recover Username"}
+                  {isSubmitting ? "Sending..." : "Send Temporary Password"}
                 </button>
 
                 <div className="text-center pt-2">
                   <button
                     type="button"
                     onClick={() => router.push("/")}
-                    className="text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+                    className="text-sm font-semibold text-gray-400 hover:text-white transition-colors"
                   >
                     Back to Sign In
                   </button>
@@ -134,10 +145,10 @@ export default function RecoverAccount() {
             </>
           ) : (
             <div className="text-center py-4">
-              <div className="mx-auto mb-6 w-16 h-16 rounded-full bg-green-50 flex items-center justify-center">
+              <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.2)]">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="w-8 h-8 text-green-600"
+                  className="w-10 h-10 text-emerald-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -147,19 +158,21 @@ export default function RecoverAccount() {
                 </svg>
               </div>
 
-              <h1 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">
+              <h1 className="text-2xl md:text-3xl font-bold text-white mb-3 tracking-tight">
                 Check Your Email
               </h1>
-              <p className="text-gray-600 mb-8">
-                {recoveryMode === "password"
-                  ? `If an account exists for ${recoveryData.email || "that address"}, we've sent a password reset link.`
-                  : `If an account exists for ${recoveryData.email || "that address"}, we've sent your username.`}
+              <p className="text-gray-300 mb-2 leading-relaxed">
+                If an account exists for {email.trim() || "that address"}, we&apos;ve sent a temporary password.
+              </p>
+              <p className="text-gray-400 text-sm mb-8 leading-relaxed">
+                It expires in 30 minutes. Sign in with it, then open Profile &rarr; Change Password to set your own.
+                Don&apos;t see it? Check your spam folder.
               </p>
 
               <button
                 type="button"
                 onClick={() => router.push("/")}
-                className="w-full py-4 rounded-full shadow-lg text-lg font-bold text-white bg-black hover:bg-gray-800 transition-all"
+                className="w-full py-4 rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.2)] text-lg font-bold text-black bg-white hover:bg-gray-200 active:scale-95 transition-all duration-200"
               >
                 Back to Sign In
               </button>
@@ -167,9 +180,9 @@ export default function RecoverAccount() {
               <button
                 type="button"
                 onClick={() => setIsSubmitted(false)}
-                className="mt-4 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+                className="mt-6 text-sm font-semibold text-gray-400 hover:text-white transition-colors"
               >
-                Didn't get it? Try again
+                Didn&apos;t get it? Try again
               </button>
             </div>
           )}

@@ -48,6 +48,18 @@ export default function Home() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isProfileSaving, setIsProfileSaving] = useState(false);
 
+  // Change Password states (inside Profile Modal)
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isPasswordSaving, setIsPasswordSaving] = useState(false);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
   const [profileData, setProfileData] = useState({
     fullName: "",
     email: "",
@@ -87,6 +99,7 @@ export default function Home() {
 
       const pic = session.profilePicture || session.avatar_url;
       if (pic) setProfilePicture(cleanValue(pic));
+      setMustChangePassword(session.mustChangePassword === true);
     }
   }, []);
 
@@ -234,6 +247,83 @@ export default function Home() {
   const handleRemoveProfilePicture = () => {
     setProfilePicture(null);
     if (profilePictureInputRef.current) profilePictureInputRef.current.value = "";
+  };
+
+  const resetPasswordForm = () => {
+    setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    setPasswordError("");
+    setShowPasswords(false);
+  };
+
+  const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({ ...prev, [name]: value }));
+    if (passwordError) setPasswordError("");
+  };
+
+  const handlePasswordSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError("");
+
+    const { currentPassword, newPassword, confirmPassword } = passwordData;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return setPasswordError("Please fill in all fields.");
+    }
+    if (newPassword.length < 6) {
+      return setPasswordError("New password must be at least 6 characters.");
+    }
+    if (newPassword !== confirmPassword) {
+      return setPasswordError("New password and confirmation do not match.");
+    }
+    if (newPassword === currentPassword) {
+      return setPasswordError("New password must be different from the current one.");
+    }
+
+    const session = readSession();
+    const email = cleanValue(session?.email || profileData.email);
+    if (!email) return setPasswordError("Could not determine your account. Please sign in again.");
+
+    try {
+      setIsPasswordSaving(true);
+
+      const base = (
+        process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || "http://localhost:5678"
+      ).replace(/\/$/, "");
+      const testMode = process.env.NEXT_PUBLIC_N8N_USE_TEST_WEBHOOK === "true";
+      const url = `${base}${testMode ? "/webhook-test" : "/webhook"}/auth/change-password`;
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-webhook-secret": process.env.NEXT_PUBLIC_N8N_WEBHOOK_SECRET!,
+        },
+        body: JSON.stringify({ email, currentPassword, newPassword }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || `Request failed (${res.status})`);
+
+      localStorage.setItem(
+        "userSession",
+        JSON.stringify({ ...(session || {}), mustChangePassword: false })
+      );
+      setMustChangePassword(false);
+
+      resetPasswordForm();
+      setIsChangingPassword(false);
+      alert("Password updated successfully!");
+    } catch (error) {
+      console.error("Password change failed:", error);
+      setPasswordError(
+        error instanceof Error && error.message
+          ? error.message
+          : "Failed to update password. Please try again."
+      );
+    } finally {
+      setIsPasswordSaving(false);
+    }
   };
 
   const handleProfileSave = async (e: React.FormEvent) => {
@@ -436,11 +526,11 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden font-sans bg-zinc-900">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden font-sans bg-zinc-950">
       <button
         onClick={() => setIsSidebarOpen(true)}
         aria-label="Open menu"
-        className="fixed top-6 right-6 z-40 p-3 rounded-full bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all"
+        className="fixed top-6 right-6 z-40 p-3 rounded-full bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)]"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -450,20 +540,21 @@ export default function Home() {
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
         />
       )}
 
+      {/* Glassmorphic Sidebar */}
       <aside
-        className={`fixed top-0 right-0 z-50 h-full w-72 bg-white/95 backdrop-blur-xl shadow-2xl transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-0 right-0 z-50 h-full w-72 bg-black/40 backdrop-blur-3xl border-l border-white/10 shadow-2xl transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "translate-x-full"
           }`}
       >
-        <div className="flex items-center justify-between px-6 py-6 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-900">Menu</h2>
+        <div className="flex items-center justify-between px-6 py-6 border-b border-white/10">
+          <h2 className="text-lg font-bold text-white tracking-tight">Menu</h2>
           <button
             onClick={() => setIsSidebarOpen(false)}
             aria-label="Close menu"
-            className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -471,15 +562,15 @@ export default function Home() {
           </button>
         </div>
 
-        <nav className="flex flex-col p-4 gap-1">
+        <nav className="flex flex-col p-4 gap-2">
           <button
             onClick={() => {
               setIsSidebarOpen(false);
               setIsProfileModalOpen(true);
             }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-800 font-medium hover:bg-gray-100 transition-colors text-left"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-200 font-medium hover:bg-white/10 hover:text-white transition-colors text-left"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             Profile
@@ -490,35 +581,33 @@ export default function Home() {
               setIsSidebarOpen(false);
               setIsSubscriptionModalOpen(true);
             }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-800 font-medium hover:bg-gray-100 transition-colors text-left"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-200 font-medium hover:bg-white/10 hover:text-white transition-colors text-left"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Subscription
           </button>
 
           <button
-            onClick={() => {
-              setIsSidebarOpen(false);
-            }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-800 font-medium hover:bg-gray-100 transition-colors text-left"
+            onClick={() => setIsSidebarOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-200 font-medium hover:bg-white/10 hover:text-white transition-colors text-left"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             Settings
           </button>
 
-          <div className="my-2 border-t border-gray-200" />
+          <div className="my-2 border-t border-white/10" />
 
           <button
             onClick={() => {
               setIsSidebarOpen(false);
               setIsLogoutModalOpen(true);
             }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 font-medium hover:bg-red-50 transition-colors text-left"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-rose-400 font-medium hover:bg-rose-500/10 transition-colors text-left"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -528,11 +617,11 @@ export default function Home() {
         </nav>
       </aside>
 
-      <video autoPlay loop muted playsInline className="absolute inset-0 z-0 w-full h-full object-cover">
+      <video autoPlay loop muted playsInline className="absolute inset-0 z-0 w-full h-full object-cover scale-105">
         <source src={`${basePath}/travel.mp4`} type="video/mp4" />
       </video>
 
-      <div className="absolute inset-0 z-0 bg-black/40"></div>
+      <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
 
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4">
         <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 drop-shadow-lg tracking-tight">
@@ -543,7 +632,7 @@ export default function Home() {
         </p>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-8 py-4 bg-white text-gray-900 rounded-full font-bold text-xl shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105 hover:bg-gray-100 transition-all duration-300 ease-in-out"
+          className="px-8 py-4 bg-white text-black rounded-full font-bold text-xl shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105 hover:bg-gray-200 active:scale-95 transition-all duration-300 ease-in-out"
         >
           Start Your Journey
         </button>
@@ -552,10 +641,10 @@ export default function Home() {
       {/* Main Itinerary Form Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-          <main className="relative w-full max-w-4xl p-8 md:p-12 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
+          <main className="relative w-full max-w-4xl p-8 md:p-12 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 md:top-8 md:right-8 p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+              className="absolute top-4 right-4 md:top-8 md:right-8 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
               aria-label="Close modal"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -564,85 +653,85 @@ export default function Home() {
             </button>
 
             <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 tracking-tight">
+              <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">
                 Plan Your Amazing Journey
               </h2>
-              <p className="text-gray-600">Provide your details to generate your itinerary.</p>
-              <span className="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+              <p className="text-gray-300">Provide your details to generate your itinerary.</p>
+              <span className="inline-block mt-4 px-3 py-1 bg-blue-500/20 text-blue-300 text-xs font-semibold rounded-full border border-blue-500/30">
                 Selected Plan: {selectedTier || "Basic"}
               </span>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-10">
               <div className="space-y-4">
-                <h3 className="text-lg font-bold text-gray-900 border-b pb-2">1. Contact Information</h3>
+                <h3 className="text-lg font-bold border-b border-white/10 pb-2 text-gray-200">1. Contact Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
-                    <input type="text" name="name" value={formData.name} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="John Doe" />
+                  <div className="relative group">
+                    <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="John Doe" />
+                    <label htmlFor="name" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Full Name</label>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="email@example.com" />
+                  <div className="relative group">
+                    <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} required
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="email@example.com" />
+                    <label htmlFor="email" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Email</label>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
-                    <input type="tel" name="number" value={formData.number} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="+1 234 567 8900" />
+                  <div className="relative group">
+                    <input type="tel" id="number" name="number" value={formData.number} onChange={handleChange} required
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="+1 234 567 8900" />
+                    <label htmlFor="number" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Phone</label>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-bold text-gray-900 border-b pb-2">2. Flight & Stay Details</h3>
+                <h3 className="text-lg font-bold border-b border-white/10 pb-2 text-gray-200">2. Flight & Stay Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Origin City/Country</label>
-                    <input type="text" name="origin" value={formData.origin} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="Manila, Philippines" />
+                  <div className="relative group">
+                    <input type="text" id="origin" name="origin" value={formData.origin} onChange={handleChange} required
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="Origin" />
+                    <label htmlFor="origin" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Origin City/Country</label>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Destination City/Country</label>
-                    <input type="text" name="destination" value={formData.destination} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="Tokyo, Japan" />
+                  <div className="relative group">
+                    <input type="text" id="destination" name="destination" value={formData.destination} onChange={handleChange} required
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="Destination" />
+                    <label htmlFor="destination" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Destination City/Country</label>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Departure</label>
-                    <input type="date" name="departureDate" value={formData.departureDate} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" />
+                  <div className="relative group">
+                    <input type="date" id="departureDate" name="departureDate" value={formData.departureDate} onChange={handleChange} required
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert" />
+                    <label htmlFor="departureDate" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-focus:text-blue-400 cursor-text">Departure</label>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Return</label>
-                    <input type="date" name="returnDate" value={formData.returnDate} onChange={handleChange}
+                  <div className="relative group">
+                    <input type="date" id="returnDate" name="returnDate" value={formData.returnDate} onChange={handleChange}
                       min={formData.departureDate || undefined}
                       max={formData.departureDate ? addDaysToDateInput(formData.departureDate, MAX_STAY_DAYS) : undefined}
                       required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" />
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert" />
+                    <label htmlFor="returnDate" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-focus:text-blue-400 cursor-text">Return</label>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Adults</label>
-                    <input type="text" name="adults" value={formData.adults} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="1" maxLength={3} />
+                  <div className="relative group">
+                    <input type="text" id="adults" name="adults" value={formData.adults} onChange={handleChange} required
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="1" maxLength={3} />
+                    <label htmlFor="adults" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Adults</label>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Budget</label>
-                    <input type="text" name="budget" value={formData.budget} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="$2500" />
+                  <div className="relative group">
+                    <input type="text" id="budget" name="budget" value={formData.budget} onChange={handleChange} required
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="$2500" />
+                    <label htmlFor="budget" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Budget</label>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Travelers</label>
-                    <input type="text" name="travelers" value={formData.travelers} onChange={handleChange} required
-                      className="w-full px-4 py-3 rounded-2xl border border-black focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-800" placeholder="1" maxLength={3} />
+                  <div className="relative group">
+                    <input type="text" id="travelers" name="travelers" value={formData.travelers} onChange={handleChange} required
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="1" maxLength={3} />
+                    <label htmlFor="travelers" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Travelers</label>
                   </div>
                 </div>
               </div>
 
               <button type="submit"
                 disabled={isSubmitting || !isFormComplete}
-                className="w-full py-4 rounded-full shadow-lg text-lg font-bold text-white bg-black hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                {isSubmitting ? "Sending..." : !isFormComplete ? "Fill Out All Fields" : "Submit"}
+                className="w-full py-4 mt-4 rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.2)] text-lg font-bold text-black bg-white hover:bg-gray-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200">
+                {isSubmitting ? "Sending..." : !isFormComplete ? "Fill Out All Fields" : "Submit Itinerary"}
               </button>
             </form>
           </main>
@@ -652,10 +741,10 @@ export default function Home() {
       {/* Subscription Modal */}
       {isSubscriptionModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-          <main className="relative w-full max-w-2xl p-8 md:p-12 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
+          <main className="relative w-full max-w-2xl p-8 md:p-12 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
             <button
               onClick={() => setIsSubscriptionModalOpen(false)}
-              className="absolute top-4 right-4 md:top-8 md:right-8 p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+              className="absolute top-4 right-4 md:top-8 md:right-8 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
               aria-label="Close modal"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -664,8 +753,8 @@ export default function Home() {
             </button>
 
             <div className="text-center mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Choose Your Plan</h2>
-              <p className="text-gray-500 mt-2">Pick the tier that fits how you travel.</p>
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Choose Your Plan</h2>
+              <p className="text-gray-300 mt-2">Pick the tier that fits how you travel.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -673,11 +762,13 @@ export default function Home() {
                 <div
                   key={tier}
                   onClick={() => setSelectedTier(tier)}
-                  className={`cursor-pointer p-6 rounded-3xl border-2 transition-all duration-200 ${selectedTier === tier ? "border-blue-600 bg-blue-50" : "border-gray-200 hover:border-blue-300"
+                  className={`cursor-pointer p-6 rounded-3xl border-2 transition-all duration-200 ${selectedTier === tier
+                    ? "border-blue-400 bg-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                    : "border-white/20 bg-black/20 hover:border-blue-400/50 hover:bg-white/5"
                     }`}
                 >
-                  <h4 className="font-bold text-gray-900 text-lg mb-1">{tier}</h4>
-                  <p className="text-sm text-gray-600">${(idx + 1) * 10}/mo</p>
+                  <h4 className="font-bold text-white text-lg mb-1">{tier}</h4>
+                  <p className="text-sm text-gray-400">${(idx + 1) * 10}/mo</p>
                 </div>
               ))}
             </div>
@@ -686,7 +777,7 @@ export default function Home() {
               type="button"
               disabled={!selectedTier}
               onClick={() => setIsSubscriptionModalOpen(false)}
-              className="w-full py-4 rounded-full shadow-lg text-lg font-bold text-white bg-black hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="w-full py-4 rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.2)] text-lg font-bold text-black bg-white hover:bg-gray-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
             >
               {selectedTier ? `Select ${selectedTier}` : "Select a Plan"}
             </button>
@@ -697,14 +788,15 @@ export default function Home() {
       {/* Profile Modal */}
       {isProfileModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-          <main className="relative w-full max-w-xl p-8 md:p-10 bg-[#fdf4e3] rounded-[2rem] shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-gray-900">
-            {/* Close Button */}
+          <main className="relative w-full max-w-xl p-8 md:p-10 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200">
             <button
               onClick={() => {
                 setIsProfileModalOpen(false);
                 setIsEditingProfile(false);
+                setIsChangingPassword(false);
+                resetPasswordForm();
               }}
-              className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-700 transition-colors"
+              className="absolute top-6 right-6 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
               aria-label="Close modal"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -712,108 +804,177 @@ export default function Home() {
               </svg>
             </button>
 
-            {/* Header */}
-            <div className="text-center mb-6">
+            <div className="text-center mb-8">
               <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Profile Details</h2>
-              <p className="text-gray-500 mt-1 text-sm font-medium">
-                {isEditingProfile ? "Edit your personal info." : "Your updated profile information."}
+              <p className="text-gray-300 mt-1 text-sm font-medium">
+                {isChangingPassword
+                  ? "Choose a new password for your account."
+                  : isEditingProfile
+                    ? "Edit your personal info."
+                    : "Your updated profile information."}
               </p>
             </div>
 
-            {!isEditingProfile ? (
-              /* VIEW MODE */
+            {isChangingPassword ? (
+              <form onSubmit={handlePasswordSave} className="space-y-6">
+                {mustChangePassword && (
+                  <p className="text-sm text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3">
+                    You signed in with a temporary password. Please set a new one now.
+                  </p>
+                )}
+
+                {([
+                  { id: "currentPassword", label: "Current or Temporary Password", auto: "current-password" },
+                  { id: "newPassword", label: "New Password", auto: "new-password" },
+                  { id: "confirmPassword", label: "Confirm New Password", auto: "new-password" },
+                ] as const).map((f) => (
+                  <div key={f.id} className="relative group">
+                    <input
+                      type={showPasswords ? "text" : "password"}
+                      id={f.id}
+                      name={f.id}
+                      value={passwordData[f.id]}
+                      onChange={handlePasswordInputChange}
+                      autoComplete={f.auto}
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent"
+                      placeholder={f.label}
+                    />
+                    <label
+                      htmlFor={f.id}
+                      className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text"
+                    >
+                      {f.label}
+                    </label>
+                  </div>
+                ))}
+
+                <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showPasswords}
+                    onChange={(e) => setShowPasswords(e.target.checked)}
+                    className="accent-white"
+                  />
+                  Show passwords
+                </label>
+
+                {passwordError && (
+                  <p
+                    role="alert"
+                    className="text-sm text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-xl px-4 py-3"
+                  >
+                    {passwordError}
+                  </p>
+                )}
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={isPasswordSaving}
+                    className="flex-1 py-4 rounded-2xl text-lg font-bold text-black bg-white hover:bg-gray-200 active:scale-95 disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                  >
+                    {isPasswordSaving ? "Updating..." : "Update Password"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsChangingPassword(false);
+                      resetPasswordForm();
+                    }}
+                    className="py-4 px-6 rounded-2xl text-lg font-bold text-white bg-white/10 border border-white/20 hover:bg-white/20 active:scale-95 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : !isEditingProfile ? (
               <div className="space-y-6">
-                {/* Profile Picture */}
+                {mustChangePassword && (
+                  <button
+                    type="button"
+                    onClick={() => setIsChangingPassword(true)}
+                    className="w-full text-left text-sm text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 hover:bg-amber-500/20 transition-colors"
+                  >
+                    You&apos;re using a temporary password. Tap here to set a new one.
+                  </button>
+                )}
                 <div className="flex flex-col items-center gap-2 mb-6">
-                  <div className="w-24 h-24 rounded-full bg-[#EFE8DD] border-2 border-amber-200/60 overflow-hidden flex items-center justify-center shadow-inner">
+                  <div className="w-24 h-24 rounded-full bg-black/40 border-2 border-white/20 overflow-hidden flex items-center justify-center shadow-inner">
                     {profilePicture ? (
                       <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <svg className="w-12 h-12 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-12 h-12 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                       </svg>
                     )}
                   </div>
-                  <span className="text-xs font-semibold px-3 py-1 bg-amber-100 text-amber-900 rounded-full">
+                  <span className="text-xs font-semibold px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 rounded-full">
                     Verified Account
                   </span>
                 </div>
 
-                {/* Details Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-white/60 rounded-2xl border border-gray-200/80">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Full Name</p>
-                    <p className="text-base font-bold text-gray-900">{profileData.fullName || "—"}</p>
+                  <div className="p-4 bg-black/20 rounded-2xl border border-white/10">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Full Name</p>
+                    <p className="text-base font-bold text-white">{profileData.fullName || "—"}</p>
                   </div>
-
-                  <div className="p-4 bg-white/60 rounded-2xl border border-gray-200/80">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Email</p>
-                    <p className="text-base font-bold text-gray-900 break-all">{profileData.email || "—"}</p>
+                  <div className="p-4 bg-black/20 rounded-2xl border border-white/10">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Email</p>
+                    <p className="text-base font-bold text-white break-all">{profileData.email || "—"}</p>
                   </div>
-
-                  <div className="p-4 bg-white/60 rounded-2xl border border-gray-200/80">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Phone</p>
-                    <p className="text-base font-bold text-gray-900">{profileData.phone || "—"}</p>
+                  <div className="p-4 bg-black/20 rounded-2xl border border-white/10">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Phone</p>
+                    <p className="text-base font-bold text-white">{profileData.phone || "—"}</p>
                   </div>
-
-                  <div className="p-4 bg-white/60 rounded-2xl border border-gray-200/80">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Country</p>
-                    <p className="text-base font-bold text-gray-900">{profileData.country || "—"}</p>
+                  <div className="p-4 bg-black/20 rounded-2xl border border-white/10">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Country</p>
+                    <p className="text-base font-bold text-white">{profileData.country || "—"}</p>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="pt-4 flex gap-3">
                   <button
                     type="button"
                     onClick={() => setIsEditingProfile(true)}
-                    className="flex-1 py-4 rounded-full text-lg font-bold text-white bg-black hover:bg-gray-800 transition-all shadow-md"
+                    className="flex-1 py-4 rounded-2xl text-lg font-bold text-black bg-white hover:bg-gray-200 active:scale-95 transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)]"
                   >
                     Edit Profile
                   </button>
                   <button
                     type="button"
+                    onClick={() => setIsChangingPassword(true)}
+                    className="py-4 px-5 rounded-2xl text-lg font-bold text-white bg-white/10 border border-white/20 hover:bg-white/20 active:scale-95 transition-all"
+                  >
+                    Change Password
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setIsProfileModalOpen(false)}
-                    className="py-4 px-6 rounded-full text-lg font-bold text-gray-700 bg-gray-200/70 hover:bg-gray-300 transition-all"
+                    className="py-4 px-6 rounded-2xl text-lg font-bold text-white bg-white/10 border border-white/20 hover:bg-white/20 active:scale-95 transition-all"
                   >
                     Close
                   </button>
                 </div>
               </div>
             ) : (
-              /* EDIT MODE */
               <form onSubmit={handleProfileSave} className="space-y-6">
                 <div className="flex flex-col items-center gap-2 mb-6">
-                  <div className="w-20 h-20 rounded-full bg-[#EFE8DD] border border-gray-300 overflow-hidden flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-full bg-black/40 border border-white/20 overflow-hidden flex items-center justify-center">
                     {profilePicture ? (
                       <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <svg className="w-10 h-10 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-10 h-10 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                       </svg>
                     )}
                   </div>
-                  <input
-                    type="file"
-                    ref={profilePictureInputRef}
-                    onChange={handleProfilePictureChange}
-                    accept="image/*"
-                    className="hidden"
-                  />
+                  <input type="file" ref={profilePictureInputRef} onChange={handleProfilePictureChange} accept="image/*" className="hidden" />
                   <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => profilePictureInputRef.current?.click()}
-                      className="text-sm text-gray-700 hover:text-black font-medium underline"
-                    >
+                    <button type="button" onClick={() => profilePictureInputRef.current?.click()} className="text-sm text-gray-300 hover:text-white font-medium underline">
                       Upload
                     </button>
                     {profilePicture && (
-                      <button
-                        type="button"
-                        onClick={handleRemoveProfilePicture}
-                        className="text-sm text-red-600 hover:text-red-700 font-medium underline"
-                      >
+                      <button type="button" onClick={handleRemoveProfilePicture} className="text-sm text-rose-400 hover:text-rose-500 font-medium underline">
                         Remove
                       </button>
                     )}
@@ -821,61 +982,35 @@ export default function Home() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-1">Full Name</label>
-                    <input
-                      type="text"
-                      name="fullName"
-                      value={profileData.fullName}
-                      onChange={handleProfileChange}
-                      className="w-full px-4 py-3 rounded-2xl border border-gray-300 bg-white/50 focus:ring-2 focus:ring-black outline-none text-gray-900 transition-all"
-                    />
+                  <div className="relative group">
+                    <input type="text" id="editFullName" name="fullName" value={profileData.fullName} onChange={handleProfileChange}
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="Name" />
+                    <label htmlFor="editFullName" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Full Name</label>
                   </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-1">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={profileData.email}
-                      onChange={handleProfileChange}
-                      className="w-full px-4 py-3 rounded-2xl border border-gray-300 bg-white/50 focus:ring-2 focus:ring-black outline-none text-gray-900 transition-all"
-                    />
+                  <div className="relative group">
+                    <input type="email" id="editEmail" name="email" value={profileData.email} onChange={handleProfileChange}
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="Email" />
+                    <label htmlFor="editEmail" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Email</label>
                   </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-1">Phone</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={profileData.phone}
-                      onChange={handleProfileChange}
-                      className="w-full px-4 py-3 rounded-2xl border border-gray-300 bg-white/50 focus:ring-2 focus:ring-black outline-none text-gray-900 transition-all"
-                    />
+                  <div className="relative group">
+                    <input type="tel" id="editPhone" name="phone" value={profileData.phone} onChange={handleProfileChange}
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="Phone" />
+                    <label htmlFor="editPhone" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Phone</label>
                   </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-1">Country</label>
-                    <input
-                      type="text"
-                      name="country"
-                      value={profileData.country}
-                      onChange={handleProfileChange}
-                      className="w-full px-4 py-3 rounded-2xl border border-gray-300 bg-white/50 focus:ring-2 focus:ring-black outline-none text-gray-900 transition-all"
-                    />
+                  <div className="relative group">
+                    <input type="text" id="editCountry" name="country" value={profileData.country} onChange={handleProfileChange}
+                      className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="Country" />
+                    <label htmlFor="editCountry" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Country</label>
                   </div>
                 </div>
 
                 <div className="pt-4 flex gap-3">
-                  <button
-                    type="submit"
-                    disabled={isProfileSaving}
-                    className="flex-1 py-4 rounded-full text-lg font-bold text-white bg-black hover:bg-gray-800 disabled:opacity-50 transition-all shadow-md"
-                  >
+                  <button type="submit" disabled={isProfileSaving}
+                    className="flex-1 py-4 rounded-2xl text-lg font-bold text-black bg-white hover:bg-gray-200 active:scale-95 disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)]">
                     {isProfileSaving ? "Saving..." : "Save Changes"}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingProfile(false)}
-                    className="py-4 px-6 rounded-full text-lg font-bold text-gray-700 bg-gray-200/70 hover:bg-gray-300 transition-all"
-                  >
+                  <button type="button" onClick={() => setIsEditingProfile(false)}
+                    className="py-4 px-6 rounded-2xl text-lg font-bold text-white bg-white/10 border border-white/20 hover:bg-white/20 active:scale-95 transition-all">
                     Cancel
                   </button>
                 </div>
@@ -885,15 +1020,16 @@ export default function Home() {
         </div>
       )}
 
+      {/* Logout Modal */}
       {isLogoutModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-          <main className="relative w-full max-w-md p-8 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-center">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Log Out</h3>
-            <p className="text-gray-600 mb-6">Are you sure you want to log out of your account?</p>
+          <main className="relative w-full max-w-md p-8 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200 text-center">
+            <h3 className="text-2xl font-bold mb-2">Log Out</h3>
+            <p className="text-gray-300 mb-8">Are you sure you want to log out of your account?</p>
             <div className="flex gap-4">
               <button
                 onClick={() => setIsLogoutModalOpen(false)}
-                className="flex-1 py-3 rounded-full text-gray-700 bg-gray-100 hover:bg-gray-200 font-bold transition-all"
+                className="flex-1 py-4 rounded-2xl text-white bg-white/10 border border-white/20 hover:bg-white/20 font-bold active:scale-95 transition-all"
               >
                 Cancel
               </button>
@@ -902,7 +1038,7 @@ export default function Home() {
                   setIsLogoutModalOpen(false);
                   router.push("/");
                 }}
-                className="flex-1 py-3 rounded-full text-white bg-red-600 hover:bg-red-700 font-bold transition-all"
+                className="flex-1 py-4 rounded-2xl text-white bg-rose-600 hover:bg-rose-700 shadow-[0_0_15px_rgba(225,29,72,0.4)] font-bold active:scale-95 transition-all"
               >
                 Logout
               </button>
