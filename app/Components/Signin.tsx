@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import TravelLoader from "./TravelLoader";
+import StartupLoader from "./Startuploader";
 
 const basePath = process.env.NODE_ENV === "production" ? "/yan-ravel" : "";
 
@@ -167,8 +168,8 @@ export default function SignIn() {
               type="button"
               onClick={() => switchMode("signin")}
               className={`flex-1 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${authMode === "signin"
-                  ? "bg-white text-black shadow-md"
-                  : "text-gray-400 hover:text-white"
+                ? "bg-white text-black shadow-md"
+                : "text-gray-400 hover:text-white"
                 }`}
             >
               Sign In
@@ -177,8 +178,8 @@ export default function SignIn() {
               type="button"
               onClick={() => switchMode("signup")}
               className={`flex-1 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${authMode === "signup"
-                  ? "bg-white text-black shadow-md"
-                  : "text-gray-400 hover:text-white"
+                ? "bg-white text-black shadow-md"
+                : "text-gray-400 hover:text-white"
                 }`}
             >
               Sign Up
@@ -344,6 +345,9 @@ export default function SignIn() {
         userName={redirectName}
         onComplete={() => router.push("/landing")}
       />
+
+      {/* Startup animation: plays first on every app launch / visit, then reveals this page */}
+      <StartupLoader />
     </div>
   );
 }

@@ -589,7 +589,7 @@ export default function Home() {
             Subscription
           </button>
 
-          <button
+          {/* <button
             onClick={() => setIsSidebarOpen(false)}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-200 font-medium hover:bg-white/10 hover:text-white transition-colors text-left"
           >
@@ -598,7 +598,7 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             Settings
-          </button>
+          </button> */}
 
           <div className="my-2 border-t border-white/10" />
 
@@ -664,7 +664,7 @@ export default function Home() {
 
             <form onSubmit={handleSubmit} className="space-y-10">
               <div className="space-y-4">
-                <h3 className="text-lg font-bold border-b border-white/10 pb-2 text-gray-200">1. Contact Information</h3>
+                <h3 className="text-lg font-bold border-b border-white/10 pb-2 text-gray-200">Contact Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="relative group">
                     <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required
@@ -679,13 +679,13 @@ export default function Home() {
                   <div className="relative group">
                     <input type="tel" id="number" name="number" value={formData.number} onChange={handleChange} required
                       className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="+1 234 567 8900" />
-                    <label htmlFor="number" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Phone</label>
+                    <label htmlFor="number" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Mobile Number</label>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-bold border-b border-white/10 pb-2 text-gray-200">2. Flight & Stay Details</h3>
+                <h3 className="text-lg font-bold border-b border-white/10 pb-2 text-gray-200">Flight & Stay Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="relative group">
                     <input type="text" id="origin" name="origin" value={formData.origin} onChange={handleChange} required
