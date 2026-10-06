@@ -41,12 +41,8 @@ export default function RecoverAccount() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        // 400 = invalid email format; anything else is a server/network problem
         throw new Error(data?.message || `Request failed (${res.status})`);
       }
-
-      // The workflow always answers the same way whether or not the email exists,
-      // so we never reveal which addresses are registered.
       setIsSubmitted(true);
     } catch (error) {
       console.error("Recovery request failed:", error);
@@ -72,12 +68,9 @@ export default function RecoverAccount() {
       >
         <source src={`${basePath}/travel.mp4`} type="video/mp4" />
       </video>
-
-      {/* Dark Gradient Overlay */}
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
 
       <div className="relative z-10 w-full max-w-md p-4">
-        {/* Glassmorphic Container */}
         <main className="w-full p-8 md:p-10 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200">
           {!isSubmitted ? (
             <>
@@ -91,7 +84,7 @@ export default function RecoverAccount() {
               </div>
 
               <form onSubmit={handleRecoverySubmit} className="space-y-6">
-                {/* Floating Label Input */}
+
                 <div className="relative group">
                   <input
                     type="email"

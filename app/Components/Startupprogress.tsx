@@ -1,7 +1,6 @@
 "use client";
 
 interface StartupProgressProps {
-    /** 0 - 100 */
     progress: number;
 }
 
@@ -32,7 +31,6 @@ export default function StartupProgress({ progress }: StartupProgressProps) {
             </div>
 
             <div className="mt-4 flex items-center justify-between text-xs">
-                {/* key restarts the fade whenever the message changes */}
                 <span key={message} className="yr-fade text-gray-300">
                     {message}
                 </span>

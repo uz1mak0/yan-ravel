@@ -5,34 +5,24 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 export type StartupPhase = "loading" | "exiting" | "done";
 
 const SESSION_KEY = "yanRavelStartupSeen";
-const MIN_MS = 3000; // shortest time the animation is shown
-const MAX_MS = 6500; // never wait longer than this for the page to finish loading
-const HOLD_MS = 350; // pause at 100% before fading out
-const EXIT_MS = 700; // must match the fade-out duration in StartupLoader
-
-// useLayoutEffect on the client avoids a one-frame flash of the loader on repeat visits;
-// useEffect on the server avoids the SSR warning.
+const MIN_MS = 3000;
+const MAX_MS = 6500;
+const HOLD_MS = 350;
+const EXIT_MS = 700;
 const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-/**
- * Runs the Yan-Ravel startup sequence.
- * - Shows once per app launch / browser session (not on every in-app navigation).
- * - Progress eases up to 92%, then completes once the page has finished loading.
- */
 export function useStartupSequence(onComplete?: () => void) {
     const [phase, setPhase] = useState<StartupPhase>("loading");
     const [progress, setProgress] = useState(0);
     const onCompleteRef = useRef(onComplete);
     onCompleteRef.current = onComplete;
 
-    // Skip the loader if it already played in this session.
     useIsoLayoutEffect(() => {
         try {
             if (sessionStorage.getItem(SESSION_KEY) === "1") {
                 setPhase("done");
             }
         } catch {
-            // sessionStorage unavailable (private mode / restricted WebView) -> just show it
         }
     }, []);
 
@@ -81,8 +71,6 @@ export function useStartupSequence(onComplete?: () => void) {
         };
     }, [phase]);
 
-    // Fade-out finished -> unmount. Kept in its own effect so the phase change
-    // above doesn't clear this timer.
     useEffect(() => {
         if (phase !== "exiting") return;
         const t = setTimeout(() => {

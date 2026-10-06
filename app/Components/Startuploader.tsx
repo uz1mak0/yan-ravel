@@ -7,13 +7,10 @@ import { STARTUP_STYLES } from "./Startupstyles";
 import { useStartupSequence } from "./Usestartupsequence";
 
 interface StartupLoaderProps {
-    /** Called once the loader has fully faded out. */
     onComplete?: () => void;
 }
 
 const APP_NAME = "Yan-Ravel";
-
-// [left %, top %, delay s] - tiny "stars" / waypoints in the background
 const SPARKS: [number, number, number][] = [
     [12, 18, 0], [82, 14, 0.6], [24, 72, 1.2], [90, 66, 0.3],
     [8, 46, 1.8], [68, 84, 0.9], [46, 10, 2.1], [56, 90, 1.5],
@@ -22,7 +19,6 @@ const SPARKS: [number, number, number][] = [
 export default function StartupLoader({ onComplete }: StartupLoaderProps) {
     const { phase, progress } = useStartupSequence(onComplete);
 
-    // Lock scrolling behind the loader (web + WebView)
     useEffect(() => {
         if (phase === "done") return;
         const prev = document.body.style.overflow;
@@ -51,7 +47,6 @@ export default function StartupLoader({ onComplete }: StartupLoaderProps) {
         >
             <style>{STARTUP_STYLES}</style>
 
-            {/* Ambient glow + cinematic gradient (same overlay as the Sign In page) */}
             <div className="yr-float pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl" />
             <div
                 className="yr-float pointer-events-none absolute -bottom-28 -right-20 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl"
@@ -67,7 +62,6 @@ export default function StartupLoader({ onComplete }: StartupLoaderProps) {
                 />
             ))}
 
-            {/* Content */}
             <div className="relative z-10 flex flex-col items-center px-6">
                 <div className="yr-fade">
                     <StartupLogo />

@@ -1,7 +1,3 @@
-// Scoped keyframes for the Yan-Ravel startup loader.
-// Injected by <StartupLoader /> so no tailwind.config / globals.css changes are needed
-// (works the same in the browser, Capacitor, or any WebView wrapper).
-
 export const STARTUP_STYLES = `
 @keyframes yr-spin     { to { transform: rotate(360deg); } }
 @keyframes yr-spin-rev { to { transform: rotate(-360deg); } }

@@ -134,7 +134,6 @@ export default function SignIn() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden font-sans bg-zinc-950">
-      {/* Background Video */}
       <video
         autoPlay
         loop
@@ -145,11 +144,9 @@ export default function SignIn() {
         <source src={`${basePath}/travel.mp4`} type="video/mp4" />
       </video>
 
-      {/* Cinematic Gradient Overlay */}
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
 
       <div className="relative z-10 w-full max-w-md p-4">
-        {/* Glassmorphic Card */}
         <main className="w-full p-8 md:p-10 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-white">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold tracking-tight mb-2">
@@ -162,7 +159,6 @@ export default function SignIn() {
             </p>
           </div>
 
-          {/* Segmented Tab */}
           <div className="flex mb-8 bg-black/30 rounded-full p-1 border border-white/10">
             <button
               type="button"
@@ -321,7 +317,7 @@ export default function SignIn() {
             </button>
           </form>
 
-          {/* Social Auth Divider */}
+
           <div className="mt-8">
             <div className="relative flex items-center mb-6">
               <div className="flex-grow border-t border-white/10"></div>
@@ -345,8 +341,6 @@ export default function SignIn() {
         userName={redirectName}
         onComplete={() => router.push("/landing")}
       />
-
-      {/* Startup animation: plays first on every app launch / visit, then reveals this page */}
       <StartupLoader />
     </div>
   );

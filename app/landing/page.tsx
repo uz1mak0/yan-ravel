@@ -15,7 +15,6 @@ const supabase =
     ? createClient(supabaseUrl, supabaseAnonKey)
     : null;
 
-// Helper function to strip literal '=' signs from string values
 const cleanValue = (val: any): string => {
   if (typeof val === "string") {
     let trimmed = val.trim();
@@ -43,12 +42,10 @@ export default function Home() {
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState<string>("Basic");
 
-  // Profile Modal states
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isProfileSaving, setIsProfileSaving] = useState(false);
 
-  // Change Password states (inside Profile Modal)
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
@@ -74,7 +71,6 @@ export default function Home() {
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const profilePictureInputRef = useRef<HTMLInputElement>(null);
 
-  // Read session safely from localStorage
   const readSession = () => {
     try {
       const stored = localStorage.getItem("userSession");
@@ -85,7 +81,6 @@ export default function Home() {
     }
   };
 
-  // Hydrate state directly on initial load
   useEffect(() => {
     const session = readSession();
     if (session) {
@@ -103,7 +98,6 @@ export default function Home() {
     }
   }, []);
 
-  // Sync profile data when Profile Modal opens
   useEffect(() => {
     async function syncProfile() {
       if (!isProfileModalOpen) return;
@@ -116,7 +110,6 @@ export default function Home() {
       const initialCountry = cleanValue(session?.country || profileData.country);
       const initialPic = cleanValue(session?.profilePicture || session?.avatar_url || profilePicture);
 
-      // Apply cleaned values to UI
       setProfileData((prev) => ({
         ...prev,
         fullName: initialName || prev.fullName,
@@ -544,7 +537,6 @@ export default function Home() {
         />
       )}
 
-      {/* Glassmorphic Sidebar */}
       <aside
         className={`fixed top-0 right-0 z-50 h-full w-72 bg-black/40 backdrop-blur-3xl border-l border-white/10 shadow-2xl transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "translate-x-full"
           }`}
@@ -638,7 +630,6 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Main Itinerary Form Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           <main className="relative w-full max-w-4xl p-8 md:p-12 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
@@ -738,7 +729,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Subscription Modal */}
       {isSubscriptionModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           <main className="relative w-full max-w-2xl p-8 md:p-12 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
@@ -785,7 +775,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Profile Modal */}
       {isProfileModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           <main className="relative w-full max-w-xl p-8 md:p-10 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200">
@@ -1020,7 +1009,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Logout Modal */}
       {isLogoutModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           <main className="relative w-full max-w-md p-8 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200 text-center">

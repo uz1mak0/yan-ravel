@@ -1,21 +1,14 @@
 "use client";
 
-/**
- * Yan-Ravel emblem: a glass disc holding a slowly turning globe,
- * with a plane circling it on a dashed flight path.
- * Animation classes (yr-*) come from startupStyles.ts.
- */
 export default function StartupLogo() {
     return (
         <div className="relative h-36 w-36 sm:h-40 sm:w-40">
-            {/* Soft pulse rings */}
             <span className="yr-ping absolute inset-0 rounded-full border border-blue-400/40" />
             <span
                 className="yr-ping absolute inset-0 rounded-full border border-white/20"
                 style={{ animationDelay: "1.3s" }}
             />
 
-            {/* Glassmorphic disc (same glass recipe as the Sign In card) */}
             <div className="absolute inset-3 rounded-full bg-white/10 backdrop-blur-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)]" />
 
             <svg
@@ -24,7 +17,6 @@ export default function StartupLogo() {
                 fill="none"
                 aria-hidden="true"
             >
-                {/* Dashed flight path */}
                 <circle
                     className="yr-ring"
                     cx="60"
@@ -36,7 +28,6 @@ export default function StartupLogo() {
                     strokeLinecap="round"
                 />
 
-                {/* Globe */}
                 <g className="yr-globe" stroke="rgba(255,255,255,0.75)" strokeWidth="1.2">
                     <circle cx="60" cy="60" r="30" />
                     <ellipse cx="60" cy="60" rx="12" ry="30" />
@@ -45,11 +36,9 @@ export default function StartupLogo() {
                     <line x1="30" y1="60" x2="90" y2="60" />
                 </g>
 
-                {/* Destination pin */}
                 <circle className="yr-pin" cx="78" cy="50" r="3" fill="#60a5fa" />
                 <circle cx="78" cy="50" r="6" fill="#60a5fa" opacity="0.25" />
 
-                {/* Orbiting plane */}
                 <g className="yr-orbit">
                     <g transform="translate(60 10) rotate(45) scale(0.85) translate(-12 -12)">
                         <path
