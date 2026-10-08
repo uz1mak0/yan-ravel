@@ -134,7 +134,7 @@ export default function SignIn() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden font-sans bg-zinc-950">
-      <video
+      {/* <video
         autoPlay
         loop
         muted
@@ -142,7 +142,20 @@ export default function SignIn() {
         className="absolute inset-0 z-0 w-full h-full object-cover scale-105"
       >
         <source src={`${basePath}/travel.mp4`} type="video/mp4" />
-      </video>
+      </video> */}
+
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
+        {/* Dark gradient base */}
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-black to-zinc-950" />
+
+        {/* Soft animated glowing orbs */}
+        <div className="absolute -top-[20%] -left-[10%] w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full bg-blue-600/15 blur-[120px] animate-pulse duration-[10000ms]" />
+        <div className="absolute top-[40%] -right-[15%] w-[45vw] h-[45vw] max-w-[550px] max-h-[550px] rounded-full bg-indigo-600/15 blur-[130px] animate-pulse duration-[8000ms]" />
+        <div className="absolute -bottom-[20%] left-[20%] w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full bg-purple-600/10 blur-[140px]" />
+
+        {/* Subtle micro-grid overlay pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+      </div>
 
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
 
