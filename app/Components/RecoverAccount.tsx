@@ -58,16 +58,11 @@ export default function RecoverAccount() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden font-sans bg-zinc-950">
-      {/* Cinematic Video Background */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
+      <img
+        src={`${basePath}/background.jpg`}
+        alt="Background"
         className="absolute inset-0 z-0 w-full h-full object-cover scale-105"
-      >
-        <source src={`${basePath}/travel.mp4`} type="video/mp4" />
-      </video>
+      />
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
 
       <div className="relative z-10 w-full max-w-md p-4">

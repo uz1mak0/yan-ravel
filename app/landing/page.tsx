@@ -609,9 +609,11 @@ export default function Home() {
         </nav>
       </aside>
 
-      <video autoPlay loop muted playsInline className="absolute inset-0 z-0 w-full h-full object-cover scale-105">
-        <source src={`${basePath}/travel.mp4`} type="video/mp4" />
-      </video>
+      <img
+        src={`${basePath}/background.jpg`}
+        alt="Background"
+        className="absolute inset-0 z-0 w-full h-full object-cover scale-105"
+      />
 
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
 
