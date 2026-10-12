@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import TravelLoader, { type TravelLoaderMode } from "../Components/TravelLoader";
+import AnimatedHero from "../Components/AnimatedHero";
 
 const basePath = process.env.NODE_ENV === "production" ? "/yan-ravel" : "";
 
@@ -618,18 +619,18 @@ export default function Home() {
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
 
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4">
-        <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 drop-shadow-lg tracking-tight">
-          Discover the World
-        </h1>
-        <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-2xl drop-shadow-md">
-          Your personalized itinerary is just a few clicks away. Let AI handle the planning so you can handle the exploring.
-        </p>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-8 py-4 bg-white text-black rounded-full font-bold text-xl shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105 hover:bg-gray-200 active:scale-95 transition-all duration-300 ease-in-out"
+        <AnimatedHero
+          play={!isArriving}
+          title="Discover the World"
+          subtitle="Your personalized itinerary is just a few clicks away. Let AI handle the planning so you can handle the exploring."
         >
-          Start Your Journey
-        </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-8 py-4 bg-white text-black rounded-full font-bold text-xl shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105 hover:bg-gray-200 active:scale-95 transition-all duration-300 ease-in-out"
+          >
+            Start Your Journey
+          </button>
+        </AnimatedHero>
       </div>
 
       {isModalOpen && (
@@ -683,12 +684,12 @@ export default function Home() {
                   <div className="relative group">
                     <input type="text" id="origin" name="origin" value={formData.origin} onChange={handleChange} required
                       className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="Origin" />
-                    <label htmlFor="origin" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Origin City/Country</label>
+                    <label htmlFor="origin" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">From?</label>
                   </div>
                   <div className="relative group">
                     <input type="text" id="destination" name="destination" value={formData.destination} onChange={handleChange} required
                       className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="Destination" />
-                    <label htmlFor="destination" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Destination City/Country</label>
+                    <label htmlFor="destination" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Where?</label>
                   </div>
                   <div className="relative group">
                     <input type="date" id="departureDate" name="departureDate" value={formData.departureDate} onChange={handleChange} required
@@ -706,17 +707,17 @@ export default function Home() {
                   <div className="relative group">
                     <input type="text" id="adults" name="adults" value={formData.adults} onChange={handleChange} required
                       className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="1" maxLength={3} />
-                    <label htmlFor="adults" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Adults</label>
+                    <label htmlFor="adults" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Adults?</label>
                   </div>
                   <div className="relative group">
                     <input type="text" id="budget" name="budget" value={formData.budget} onChange={handleChange} required
                       className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="$2500" />
-                    <label htmlFor="budget" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Budget</label>
+                    <label htmlFor="budget" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Your Budget</label>
                   </div>
                   <div className="relative group">
                     <input type="text" id="travelers" name="travelers" value={formData.travelers} onChange={handleChange} required
                       className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="1" maxLength={3} />
-                    <label htmlFor="travelers" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Travelers</label>
+                    <label htmlFor="travelers" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Total Travelers</label>
                   </div>
                 </div>
               </div>
