@@ -618,6 +618,26 @@ export default function Home() {
 
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
 
+      {/* Upper Left Logo */}
+      <div className="fixed top-6 left-6 z-40 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 text-blue-300 transform rotate-45"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        </div>
+        <span className="text-xl md:text-2xl font-bold tracking-tight">
+          <span className="text-[#fefbe9]">Yan</span>
+          <span className="text-[#93c5fd]">-Ravel</span>
+        </span>
+      </div>
+
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4">
         <AnimatedHero
           play={!isArriving}
