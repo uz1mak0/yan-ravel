@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import TravelLoader, { type TravelLoaderMode } from "../Components/TravelLoader";
+import AnimatedHero from "../Components/AnimatedHero";
 
 const basePath = process.env.NODE_ENV === "production" ? "/yan-ravel" : "";
 
@@ -15,7 +16,6 @@ const supabase =
     ? createClient(supabaseUrl, supabaseAnonKey)
     : null;
 
-// Helper function to strip literal '=' signs from string values
 const cleanValue = (val: any): string => {
   if (typeof val === "string") {
     let trimmed = val.trim();
@@ -43,12 +43,10 @@ export default function Home() {
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState<string>("Basic");
 
-  // Profile Modal states
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isProfileSaving, setIsProfileSaving] = useState(false);
 
-  // Change Password states (inside Profile Modal)
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
@@ -74,7 +72,6 @@ export default function Home() {
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const profilePictureInputRef = useRef<HTMLInputElement>(null);
 
-  // Read session safely from localStorage
   const readSession = () => {
     try {
       const stored = localStorage.getItem("userSession");
@@ -85,7 +82,6 @@ export default function Home() {
     }
   };
 
-  // Hydrate state directly on initial load
   useEffect(() => {
     const session = readSession();
     if (session) {
@@ -103,7 +99,6 @@ export default function Home() {
     }
   }, []);
 
-  // Sync profile data when Profile Modal opens
   useEffect(() => {
     async function syncProfile() {
       if (!isProfileModalOpen) return;
@@ -116,7 +111,6 @@ export default function Home() {
       const initialCountry = cleanValue(session?.country || profileData.country);
       const initialPic = cleanValue(session?.profilePicture || session?.avatar_url || profilePicture);
 
-      // Apply cleaned values to UI
       setProfileData((prev) => ({
         ...prev,
         fullName: initialName || prev.fullName,
@@ -544,7 +538,6 @@ export default function Home() {
         />
       )}
 
-      {/* Glassmorphic Sidebar */}
       <aside
         className={`fixed top-0 right-0 z-50 h-full w-72 bg-black/40 backdrop-blur-3xl border-l border-white/10 shadow-2xl transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "translate-x-full"
           }`}
@@ -589,7 +582,7 @@ export default function Home() {
             Subscription
           </button>
 
-          <button
+          {/* <button
             onClick={() => setIsSidebarOpen(false)}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-200 font-medium hover:bg-white/10 hover:text-white transition-colors text-left"
           >
@@ -598,7 +591,7 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             Settings
-          </button>
+          </button> */}
 
           <div className="my-2 border-t border-white/10" />
 
@@ -617,28 +610,29 @@ export default function Home() {
         </nav>
       </aside>
 
-      <video autoPlay loop muted playsInline className="absolute inset-0 z-0 w-full h-full object-cover scale-105">
-        <source src={`${basePath}/travel.mp4`} type="video/mp4" />
-      </video>
+      <img
+        src={`${basePath}/background.jpg`}
+        alt="Background"
+        className="absolute inset-0 z-0 w-full h-full object-cover scale-105"
+      />
 
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
 
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4">
-        <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 drop-shadow-lg tracking-tight">
-          Discover the World
-        </h1>
-        <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-2xl drop-shadow-md">
-          Your personalized itinerary is just a few clicks away. Let AI handle the planning so you can handle the exploring.
-        </p>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-8 py-4 bg-white text-black rounded-full font-bold text-xl shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105 hover:bg-gray-200 active:scale-95 transition-all duration-300 ease-in-out"
+        <AnimatedHero
+          play={!isArriving}
+          title="Discover the World"
+          subtitle="Your personalized itinerary is just a few clicks away. Let AI handle the planning so you can handle the exploring."
         >
-          Start Your Journey
-        </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-8 py-4 bg-white text-black rounded-full font-bold text-xl shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105 hover:bg-gray-200 active:scale-95 transition-all duration-300 ease-in-out"
+          >
+            Start Your Journey
+          </button>
+        </AnimatedHero>
       </div>
 
-      {/* Main Itinerary Form Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           <main className="relative w-full max-w-4xl p-8 md:p-12 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
@@ -664,7 +658,7 @@ export default function Home() {
 
             <form onSubmit={handleSubmit} className="space-y-10">
               <div className="space-y-4">
-                <h3 className="text-lg font-bold border-b border-white/10 pb-2 text-gray-200">1. Contact Information</h3>
+                <h3 className="text-lg font-bold border-b border-white/10 pb-2 text-gray-200">Contact Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="relative group">
                     <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required
@@ -679,23 +673,23 @@ export default function Home() {
                   <div className="relative group">
                     <input type="tel" id="number" name="number" value={formData.number} onChange={handleChange} required
                       className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="+1 234 567 8900" />
-                    <label htmlFor="number" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Phone</label>
+                    <label htmlFor="number" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Mobile Number</label>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-bold border-b border-white/10 pb-2 text-gray-200">2. Flight & Stay Details</h3>
+                <h3 className="text-lg font-bold border-b border-white/10 pb-2 text-gray-200">Flight & Stay Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="relative group">
                     <input type="text" id="origin" name="origin" value={formData.origin} onChange={handleChange} required
                       className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="Origin" />
-                    <label htmlFor="origin" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Origin City/Country</label>
+                    <label htmlFor="origin" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">From?</label>
                   </div>
                   <div className="relative group">
                     <input type="text" id="destination" name="destination" value={formData.destination} onChange={handleChange} required
                       className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="Destination" />
-                    <label htmlFor="destination" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Destination City/Country</label>
+                    <label htmlFor="destination" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Where?</label>
                   </div>
                   <div className="relative group">
                     <input type="date" id="departureDate" name="departureDate" value={formData.departureDate} onChange={handleChange} required
@@ -713,17 +707,17 @@ export default function Home() {
                   <div className="relative group">
                     <input type="text" id="adults" name="adults" value={formData.adults} onChange={handleChange} required
                       className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="1" maxLength={3} />
-                    <label htmlFor="adults" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Adults</label>
+                    <label htmlFor="adults" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Adults?</label>
                   </div>
                   <div className="relative group">
                     <input type="text" id="budget" name="budget" value={formData.budget} onChange={handleChange} required
                       className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="$2500" />
-                    <label htmlFor="budget" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Budget</label>
+                    <label htmlFor="budget" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Your Budget</label>
                   </div>
                   <div className="relative group">
                     <input type="text" id="travelers" name="travelers" value={formData.travelers} onChange={handleChange} required
                       className="peer w-full px-4 pt-6 pb-2 rounded-2xl bg-black/20 border border-white/20 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all placeholder-transparent" placeholder="1" maxLength={3} />
-                    <label htmlFor="travelers" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Travelers</label>
+                    <label htmlFor="travelers" className="absolute left-4 top-2 text-xs font-medium text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-400 cursor-text">Total Travelers</label>
                   </div>
                 </div>
               </div>
@@ -738,7 +732,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Subscription Modal */}
       {isSubscriptionModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           <main className="relative w-full max-w-2xl p-8 md:p-12 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] animate-in fade-in zoom-in-95 duration-200">
@@ -785,7 +778,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Profile Modal */}
       {isProfileModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           <main className="relative w-full max-w-xl p-8 md:p-10 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200">
@@ -1020,7 +1012,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Logout Modal */}
       {isLogoutModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           <main className="relative w-full max-w-md p-8 bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200 text-center">

@@ -5,21 +5,11 @@ import { useEffect, useRef, useState } from "react";
 export type TravelLoaderMode = "signin" | "signup";
 
 interface TravelLoaderProps {
-    /** Show / hide the loader. Hiding plays a smooth fade-out before unmounting. */
     visible: boolean;
-    /** Used for the greeting, e.g. "Welcome back, Maria". Only the first name is shown. */
     userName?: string;
-    /** Changes the greeting and the first status line. */
     mode?: TravelLoaderMode;
-    /** How long the plane takes to fly the full route, in ms. */
     durationMs?: number;
-    /**
-     * Where the animation begins, 0–100.
-     * Use 100 on the destination page to pick up exactly where the previous
-     * page left off (plane already landed) and simply fade out.
-     */
     startAt?: number;
-    /** Fires once when the plane reaches the destination. */
     onComplete?: () => void;
 }
 
@@ -76,7 +66,6 @@ export default function TravelLoader({
         return () => clearTimeout(timer);
     }, [visible]);
 
-    // Drive the plane, trail and progress bar from a single progress value.
     useEffect(() => {
         if (!visible || !rendered) return;
         const arc = arcRef.current;
