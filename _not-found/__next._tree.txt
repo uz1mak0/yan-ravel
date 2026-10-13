@@ -1,0 +1,2 @@
+:HL["/yan-ravel/_next/static/chunks/0gtqa8.8_ix6h.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"CqzzyxF3omdRcezuBQk4x"}
