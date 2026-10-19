@@ -41,18 +41,23 @@ export default function BrandIntro() {
                     <div className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-2xl border border-white/20 shadow-[0_0_25px_rgba(96,165,250,0.35)]">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            width="26"
-                            height="26"
+                            width="30"
+                            height="30"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
-                            strokeWidth="2"
+                            strokeWidth="1.8"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             className="text-blue-300"
                         >
-                            <path d="m22 2-7 20-4-9-9-4Z" />
-                            <path d="M22 2 11 13" />
+                            {/* start point */}
+                            <circle cx="4.5" cy="19" r="1.8" />
+                            {/* dashed route */}
+                            <path d="M6.8 18.6c3-.1 4-2.2 7-2.5" strokeDasharray="1.8 2.6" />
+                            {/* destination pin */}
+                            <path d="M17.5 2.5a4.7 4.7 0 0 0-4.7 4.7c0 3.6 4.7 8.8 4.7 8.8s4.7-5.2 4.7-8.8a4.7 4.7 0 0 0-4.7-4.7z" />
+                            <circle cx="17.5" cy="7.2" r="1.7" />
                         </svg>
                     </div>
                     <h1 className="yr-wordmark text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tighter leading-none pb-1">

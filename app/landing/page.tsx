@@ -618,39 +618,54 @@ export default function Home() {
 
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
 
-      {/* Upper Left Logo */}
-      <div className="fixed top-6 left-6 z-40 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-blue-300 transform rotate-45"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-          </svg>
-        </div>
-        <span className="text-xl md:text-2xl font-bold tracking-tight">
-          <span className="text-[#fefbe9]">Yan</span>
-          <span className="text-[#93c5fd]">-Ravel</span>
-        </span>
-      </div>
-
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4">
-        <AnimatedHero
-          play={!isArriving}
-          title="Discover the World"
-          subtitle="Your personalized itinerary is just a few clicks away. Let AI handle the planning so you can handle the exploring."
-        >
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="px-8 py-4 bg-white text-black rounded-full font-bold text-xl shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105 hover:bg-gray-200 active:scale-95 transition-all duration-300 ease-in-out"
+        {/* Hero block: the logo is positioned ABOVE this wrapper (absolute, bottom-full),
+            so it never pushes the title/subtitle/button out of their current position. */}
+        <div className="relative">
+          {/* Centered Logo */}
+          <div
+            className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-5 md:mb-8 flex items-center gap-3 md:gap-4 whitespace-nowrap transition-all duration-700 ease-out ${isArriving ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
+              }`}
           >
-            Start Your Journey
-          </button>
-        </AnimatedHero>
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-[0_0_25px_rgba(255,255,255,0.12)]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-7 w-7 md:h-9 md:w-9 text-blue-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                {/* Start point */}
+                <circle cx="4.5" cy="19" r="1.8" />
+                {/* Dashed route */}
+                <path d="M6.8 18.6c3-.1 4-2.2 7-2.5" strokeDasharray="1.8 2.6" />
+                {/* Destination pin */}
+                <path d="M17.5 2.5a4.7 4.7 0 0 0-4.7 4.7c0 3.6 4.7 8.8 4.7 8.8s4.7-5.2 4.7-8.8a4.7 4.7 0 0 0-4.7-4.7z" />
+                <circle cx="17.5" cy="7.2" r="1.7" />
+              </svg>
+            </div>
+            <span className="text-3xl md:text-5xl font-bold tracking-tight">
+              <span className="text-[#fefbe9]">Yan</span>
+              <span className="text-[#93c5fd]">-Ravel</span>
+            </span>
+          </div>
+
+          <AnimatedHero
+            play={!isArriving}
+            title="Discover the World"
+            subtitle="Your personalized itinerary is just a few clicks away. Let AI handle the planning so you can handle the exploring."
+          >
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-8 py-4 bg-white text-black rounded-full font-bold text-xl shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105 hover:bg-gray-200 active:scale-95 transition-all duration-300 ease-in-out"
+            >
+              Start Your Journey
+            </button>
+          </AnimatedHero>
+        </div>
       </div>
 
       {isModalOpen && (
