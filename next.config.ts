@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
-const isProd = process.env.NODE_ENV === 'production';
+//const isGithubPages = process.env.CAPACITOR_BUILD !== 'true' && process.env.NODE_ENV === 'production';
 
 const nextConfig = {
   output: 'export',
-  basePath: isProd ? '/yan-ravel' : '',
+  basePath: '', // Keep this empty for local Capacitor builds
   images: {
     unoptimized: true,
   },

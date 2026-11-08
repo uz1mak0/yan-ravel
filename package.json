@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "predeploy": "npm run build && echo > out/.nojekyll",
-    "deploy": "gh-pages -d out --dotfiles"
+    "deploy": "gh-pages -d out --dotfiles",
+    "export": "next build",
+    "mobile:build": "npm run build && npx cap sync",
+    "mobile:android": "npm run mobile:build && npx cap open android",
+    "mobile:ios": "npm run mobile:build && npx cap open ios"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",

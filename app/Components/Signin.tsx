@@ -296,7 +296,7 @@ export default function SignIn() {
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={() => router.push("/recover-account")}
+                    onClick={() => router.push(`${basePath}/recover-account`)}
                     className="text-sm font-medium text-gray-300 hover:text-white transition-colors"
                   >
                     Forgot password?
@@ -316,7 +316,6 @@ export default function SignIn() {
                     : "Create Account"}
               </button>
             </form>
-
 
             <div className="mt-8">
               <div className="relative flex items-center mb-6">
